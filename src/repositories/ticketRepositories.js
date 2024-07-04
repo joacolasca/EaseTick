@@ -53,4 +53,7 @@ class TicketRepository {
         }
     }
 }
-export default TicketRepository;
+
+module.exports = {
+    TicketRepository
+};
