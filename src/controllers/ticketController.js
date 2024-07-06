@@ -14,7 +14,4 @@ router.post("/getClientTicket", async (req, res) => {
     }
 });
 
-module.exports = {
-    obtenerDatosDashboard,
-    TickerRouter: router
-};
+module.exports = router;

@@ -13,7 +13,7 @@ app.use(express.json());
 app.use("/front", express.static("public"));
 
 app.use("/easeTicket", TicketRouter);
-
+app.use('/tickets', TicketRouter);
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

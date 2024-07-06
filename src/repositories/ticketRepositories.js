@@ -1,5 +1,4 @@
-const supabase = require('../configs/supabase');
-
+const supabase = require('../configs/supabase')
 class TicketRepository {
     async obtenerTicketsDeEmpleado(id) {
         const {data, error} = await supabase
