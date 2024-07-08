@@ -22,7 +22,7 @@ class TicketRepository {
         try {
             const { data, error } = await supabase
                 .from('ticket')
-                .select('*')
+                .select('*, prioridad:prioridad(nombre)')
                 .eq('fkusuario', id)
                 .eq('fkestado', 1);
 
@@ -51,7 +51,7 @@ class TicketRepository {
 
             return data;
         } catch (error) {
-            console.error(`Error en obtenerTicketsResueltosDeEmpleado: ${error.message}`);
+            console.error(`Error en obtener Tickets Resueltos De Empleado: ${error.message}`);
             throw error;
         }
     }
@@ -75,7 +75,47 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerFeedbackDeEmpleado(id) {
+        try {
+            let { data, error } = await supabase
+                .from('calificacion')
+                .select('puntaje')
+                .eq('fkusuario', id);
     
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            const totalResenas = data.length;
+            let positivo = 0;
+            let neutral = 0;
+            let negativo = 0;
+    
+            data.forEach(item => {
+                if (item.puntaje == 1 || item.puntaje == 2) {
+                    negativo++;
+                } else if (item.puntaje == 3) {
+                    neutral++;
+                } else if (item.puntaje == 4 || item.puntaje == 5) {
+                    positivo++;
+                }
+            });
+    
+            const porcentajePositivo = Math.round((positivo / totalResenas) * 100);
+            const porcentajeNeutral = Math.round((neutral / totalResenas) * 100);
+            const porcentajeNegativo = Math.round((negativo / totalResenas) * 100);
+    
+            return {
+                total: totalResenas,
+                positivo: porcentajePositivo,
+                neutral: porcentajeNeutral,
+                negativo: porcentajeNegativo
+            };
+        } catch (error) {
+            console.error(`Hubo un error al obtener el feedback del empleado: ${error.message}`);
+            throw error;
+        }
+    }
 }
 
 module.exports = TicketRepository;

@@ -37,6 +37,16 @@ class TicketService {
             throw new Error(`Error al obtener tickets del empleado: ${error.message}`);
         }
     }
+    obtenerFeedbackDeEmpleado = async(id) => {
+        try{
+            const repo = new TicketRepository();
+            const tickets = await repo.obtenerFeedbackDeEmpleado(id);
+            return tickets;
+        }
+        catch(error) {
+            throw new Error(`Error al obtener tickets del empleado: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;
