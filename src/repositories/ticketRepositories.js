@@ -77,7 +77,7 @@ class TicketRepository {
     }
     async obtenerFeedbackDeEmpleado(id) {
         try {
-            let { data, error } = await supabase
+            const { data, error } = await supabase
                 .from('calificacion')
                 .select('puntaje')
                 .eq('fkusuario', id);
@@ -113,6 +113,34 @@ class TicketRepository {
             };
         } catch (error) {
             console.error(`Hubo un error al obtener el feedback del empleado: ${error.message}`);
+            throw error;
+        }
+    }
+    async obtenerPorcentajeTicketsResueltos(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechafinalizado')
+                .eq('fkusuario', id)
+             if (error) {
+                throw new Error(error.message);
+            }
+            const TotalTickets = data.length
+            let ticketsResueltos = 0;
+            let ticketsNoResueltos = 0;
+            data.forEach(item => {
+                if (item.fechafinalizado != null) ticketsResueltos++;
+                else ticketsNoResueltos++;
+            });
+            const NoResueltos = Math.round((ticketsNoResueltos / TotalTickets) * 100);
+            const Resueltos = Math.round((ticketsResueltos / TotalTickets) * 100);
+            return{
+                Tickets: TotalTickets,
+                NoRealizados: NoResueltos,
+                Realizados: Resueltos
+            }
+        } catch (error) {
+            console.error(`Hubo un error al obtener los tickets que vencen hoy: ${error.message}`);
             throw error;
         }
     }
