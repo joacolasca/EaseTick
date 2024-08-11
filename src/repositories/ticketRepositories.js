@@ -144,6 +144,31 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerDetalleDeTicketDeEmpleado(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select(`
+                    asunto,
+                    fechacreacion,
+                    empresa:fkempresa(nombre),
+                    estado:fkestado(nombre),
+                    prioridad:fkprioridad(nombre, caducidad),
+                    usuario:fkusuario(nombre)
+                `)
+                .eq('fkusuario', id);
+                
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            return data;
+        } catch (error) {
+            console.error(`Error en obtenerDetalleDeTicketDeEmpleado: ${error.message}`);
+            throw error;
+        }
+    }
+    
 }
 
 module.exports = TicketRepository;

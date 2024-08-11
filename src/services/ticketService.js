@@ -57,6 +57,15 @@ class TicketService {
             throw new Error(`Error al obtener porcentaje de los tickets: ${error.message}`);
         }
     }
+    obtenerDetalleDeTicketDeEmpleado = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const ticketDetail = await repo.obtenerDetalleDeTicketDeEmpleado(id);
+            return ticketDetail;
+        } catch (error) {
+            throw new Error(`Error al obtener detalle del ticket del empleado: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

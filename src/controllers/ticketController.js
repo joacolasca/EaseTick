@@ -64,5 +64,14 @@ router.get("/porcentajeTicketsResueltos/:id", async (req, res) => {
     } catch (e) {
         return res.status(500).send({ error: `Hubo un error al obtener el porcentaje de tickets: ${e.message}` });
     }
-})
+});
+router.get("/detalleTicket/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketDetail = await svc.obtenerDetalleDeTicketDeEmpleado(id);
+        return res.status(200).json({ success: true, message: ticketDetail });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener el detalle del ticket: ${e.message}` });
+    }
+});
 module.exports = router;
