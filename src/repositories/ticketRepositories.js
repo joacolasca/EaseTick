@@ -205,13 +205,14 @@ class TicketRepository {
     
             // Inicializar el objeto para contar los tickets por día de la semana
             const ticketsPorDia = {
-                'D': 0, // Domingo
                 'L': 0, // Lunes
                 'M': 0, // Martes
                 'X': 0, // Miércoles
                 'J': 0, // Jueves
                 'V': 0, // Viernes
-                'S': 0  // Sábado
+                'S': 0,  // Sábado
+                'D': 0 // Domingo
+
             };
     
             data.forEach(ticket => {
@@ -292,6 +293,78 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerTicketsSinResolverPorDiaDeLaSemana(id) {
+        try {
+            // Obtener la fecha actual
+            const hoy = new Date();
+            const diaSemana = hoy.getDay();
+    
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+    
+            // Calcular la fecha del lunes anterior al último domingo
+            const ultimoLunes = new Date(ultimoDomingo);
+            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
+    
+            // Ajustar la fecha de inicio a la medianoche del último lunes
+            ultimoLunes.setHours(0, 0, 0, 0);
+    
+            // Ajustar la fecha de fin a las 23:59:59 del último domingo
+            ultimoDomingo.setHours(23, 59, 59, 999);
+    
+            // Realizar la consulta para tickets sin resolver
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('id, fechacreacion')
+                .eq('fkusuario', id)
+                .eq('fkestado', 1)  // Suponiendo que el estado "1" es "Abierto"
+                .gte('fechacreacion', ultimoLunes.toISOString())
+                .lte('fechacreacion', ultimoDomingo.toISOString());
+    
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            // Mapeo de los valores de getDay() a los días de la semana que necesitas
+            const mapaDias = {
+                0: 'D', // Domingo
+                1: 'L', // Lunes
+                2: 'M', // Martes
+                3: 'X', // Miércoles
+                4: 'J', // Jueves
+                5: 'V', // Viernes
+                6: 'S'  // Sábado
+            };
+    
+            // Inicializar el objeto de resultados
+            const ticketsSinResolverPorDia = {
+                'L': 0, // Lunes
+                'M': 0, // Martes
+                'X': 0, // Miércoles
+                'J': 0, // Jueves
+                'V': 0, // Viernes
+                'S': 0, // Sábado
+                'D': 0  // Domingo
+            };
+    
+            // Procesar los datos para contar los tickets sin resolver por día de la semana
+            data.forEach(ticket => {
+                const diaSemana = new Date(ticket.fechacreacion).getDay();
+                const dia = mapaDias[diaSemana]; // Mapea el día al formato deseado
+                ticketsSinResolverPorDia[dia]++;
+            });
+    
+            console.log('Tickets sin resolver por día:', ticketsSinResolverPorDia);
+    
+            return ticketsSinResolverPorDia;
+        } catch (error) {
+            console.error(`Error en obtenerTicketsSinResolverPorDiaDeLaSemana: ${error.message}`);
+            throw error;
+        }
+    }
+    
+    
     async obtenerCantidadTicketsPorPrioridad(id) {
         try {
             // Consultar cantidad de tickets de prioridad Baja

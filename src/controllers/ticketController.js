@@ -119,5 +119,14 @@ router.get("/porcentajeTicketsPorEstado/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener el porcentaje de tickets por estado: ${e.message}` });
     }
 });
+router.get("/ticketsSinResolverPorDiaDeLaSemana/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketsSinResolverPorDia = await svc.obtenerTicketsSinResolverPorDiaDeLaSemana(id);
+        return res.status(200).json({ success: true, message: ticketsSinResolverPorDia });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los tickets sin resolver por día de la semana: ${e.message}` });
+    }
+});
 
 module.exports = router;

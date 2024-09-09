@@ -111,6 +111,15 @@ class TicketService {
             throw new Error(`Error al obtener el porcentaje de tickets por estado: ${error.message}`);
         }
     }
+    async obtenerTicketsSinResolverPorDiaDeLaSemana(id) {
+        try {
+            const repo = new TicketRepository();
+            const ticketsSinResolverPorDia = await repo.obtenerTicketsSinResolverPorDiaDeLaSemana(id);
+            return ticketsSinResolverPorDia;
+        } catch (error) {
+            throw new Error(`Error al obtener tickets sin resolver por día de la semana: ${error.message}`);
+        }
+    }
     
 }
 
