@@ -180,50 +180,55 @@ class TicketRepository {
             // Calcular la fecha del lunes anterior al último domingo
             const ultimoLunes = new Date(ultimoDomingo);
             ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
-
+    
             // Ajustar la fecha de inicio a la medianoche del último lunes
             ultimoLunes.setHours(0, 0, 0, 0);
             // Ajustar la fecha de fin a las 23:59:59 del último domingo
             ultimoDomingo.setHours(23, 59, 59, 999);
-
+    
             console.log('Último Lunes:', ultimoLunes);
             console.log('Último Domingo:', ultimoDomingo);
-
+    
             const { data, error } = await supabase
                 .from('ticket')
                 .select('id, fechacreacion')
                 .eq('fkusuario', id)
                 .gte('fechacreacion', ultimoLunes.toISOString())
                 .lte('fechacreacion', ultimoDomingo.toISOString());
-
+    
             if (error) {
                 throw new Error(error.message);
             }
-
-            // Procesar los datos para contar los tickets por día de la semana
+    
+            // Mapeo de los días de la semana a las letras correspondientes
+            const diasSemana = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    
+            // Inicializar el objeto para contar los tickets por día de la semana
             const ticketsPorDia = {
-                0: 0, // Lunes
-                1: 0, // Martes
-                2: 0, // Miercoles
-                3: 0, // Jueves
-                4: 0, // Viernes
-                5: 0, // Sabado
-                6: 0  // Domingo
+                'D': 0, // Domingo
+                'L': 0, // Lunes
+                'M': 0, // Martes
+                'X': 0, // Miércoles
+                'J': 0, // Jueves
+                'V': 0, // Viernes
+                'S': 0  // Sábado
             };
-
+    
             data.forEach(ticket => {
-                const diaSemana = new Date(ticket.fechacreacion).getDay();
-                ticketsPorDia[diaSemana]++;
+                const diaSemanaNumerico = new Date(ticket.fechacreacion).getDay();
+                const diaSemanaLetra = diasSemana[diaSemanaNumerico];
+                ticketsPorDia[diaSemanaLetra]++;
             });
-
+    
             console.log('Tickets por día:', ticketsPorDia);
-
+    
             return ticketsPorDia;
         } catch (error) {
             console.error(`Error en obtenerTicketsPorDiaDeLaSemana: ${error.message}`);
             throw error;
         }
     }
+    
     async obtenerTicketsResueltosPorDiaDeLaSemana(id) {
         try {
             // Obtener la fecha actual
@@ -258,21 +263,25 @@ class TicketRepository {
                 throw new Error(error.message);
             }
     
-            // Inicializamos el contador de tickets por día (0 = Lunes, 6 = Domingo)
+            // Mapeo de los días de la semana a las letras correspondientes
+            const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+    
+            // Inicializamos el contador de tickets por día con letras
             const ticketsResueltosPorDia = {
-                0: 0, // Lunes
-                1: 0, // Martes
-                2: 0, // Miércoles
-                3: 0, // Jueves
-                4: 0, // Viernes
-                5: 0, // Sábado
-                6: 0  // Domingo
+                'L': 0, // Lunes
+                'M': 0, // Martes
+                'X': 0, // Miércoles
+                'J': 0, // Jueves
+                'V': 0, // Viernes
+                'S': 0, // Sábado
+                'D': 0
             };
     
-            // Recorremos los tickets y los contamos por día de la semana
+            // Recorremos los tickets y los contamos por día de la semana usando las letras
             data.forEach(ticket => {
                 const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
-                ticketsResueltosPorDia[diaSemanaResuelto]++;
+                const diaSemanaLetra = diasSemana[diaSemanaResuelto];
+                ticketsResueltosPorDia[diaSemanaLetra]++;
             });
     
             console.log('Tickets resueltos por día:', ticketsResueltosPorDia);
@@ -280,82 +289,6 @@ class TicketRepository {
             return ticketsResueltosPorDia;
         } catch (error) {
             console.error(`Error en obtenerTicketsResueltosPorDiaDeLaSemana: ${error.message}`);
-            throw error;
-        }
-    }
-    async obtenerPromedioHorasResolucionPorDiaDeLaSemana(id) {
-        try {
-            // Obtener la fecha actual
-            const hoy = new Date();
-            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
-            const diaSemana = hoy.getDay();
-            // Calcular la fecha del último domingo
-            const ultimoDomingo = new Date(hoy);
-            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
-            // Calcular la fecha del lunes anterior al último domingo
-            const ultimoLunes = new Date(ultimoDomingo);
-            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
-    
-            // Ajustar la fecha de inicio a la medianoche del último lunes
-            ultimoLunes.setHours(0, 0, 0, 0);
-            // Ajustar la fecha de fin a las 23:59:59 del último domingo
-            ultimoDomingo.setHours(23, 59, 59, 999);
-    
-            console.log('Último Lunes:', ultimoLunes);
-            console.log('Último Domingo:', ultimoDomingo);
-    
-            // Consulta para obtener los tickets resueltos durante la última semana con fecha de creación y finalización
-            const { data, error } = await supabase
-                .from('ticket')
-                .select('fechacreacion, fechafinalizado')
-                .eq('fkusuario', id)
-                .not('fechafinalizado', 'is', null) // Solo tickets resueltos
-                .gte('fechafinalizado', ultimoLunes.toISOString())
-                .lte('fechafinalizado', ultimoDomingo.toISOString());
-    
-            if (error) {
-                throw new Error(error.message);
-            }
-    
-            // Inicializamos el contador de horas por día de la semana (0 = Lunes, 6 = Domingo)
-            const horasResolucionPorDia = {
-                0: { totalHoras: 0, totalTickets: 0 }, // Lunes
-                1: { totalHoras: 0, totalTickets: 0 }, // Martes
-                2: { totalHoras: 0, totalTickets: 0 }, // Miércoles
-                3: { totalHoras: 0, totalTickets: 0 }, // Jueves
-                4: { totalHoras: 0, totalTickets: 0 }, // Viernes
-                5: { totalHoras: 0, totalTickets: 0 }, // Sábado
-                6: { totalHoras: 0, totalTickets: 0 }  // Domingo
-            };
-    
-            // Recorremos los tickets y calculamos el tiempo de resolución en horas
-            data.forEach(ticket => {
-                const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
-                const fechaCreacion = new Date(ticket.fechacreacion);
-                const fechaFinalizacion = new Date(ticket.fechafinalizado);
-    
-                // Diferencia en milisegundos
-                const diferenciaMs = fechaFinalizacion - fechaCreacion;
-                // Convertimos a horas
-                const diferenciaHoras = diferenciaMs / (1000 * 60 * 60);
-    
-                // Acumulamos las horas y el total de tickets por día
-                horasResolucionPorDia[diaSemanaResuelto].totalHoras += diferenciaHoras;
-                horasResolucionPorDia[diaSemanaResuelto].totalTickets++;
-            });
-    
-            // Calculamos el promedio de horas por día de la semana
-            const promedioHorasPorDia = {};
-            for (const dia in horasResolucionPorDia) {
-                const { totalHoras, totalTickets } = horasResolucionPorDia[dia];
-                promedioHorasPorDia[dia] = totalTickets > 0 ? (totalHoras / totalTickets).toFixed(2) : 0;
-            }
-    
-            console.log('Promedio de horas por día:', promedioHorasPorDia);
-    
-            return promedioHorasPorDia;
-        } catch (error) {
-            console.error(`Error en obtenerPromedioHorasResolucionPorDiaDeLaSemana: ${error.message}`);
             throw error;
         }
     }
@@ -417,6 +350,87 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerPromedioHorasResolucionPorDiaDeLaSemana(id) {
+        try {
+            // Obtener la fecha actual
+            const hoy = new Date();
+            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
+            const diaSemana = hoy.getDay();
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+            // Calcular la fecha del lunes anterior al último domingo
+            const ultimoLunes = new Date(ultimoDomingo);
+            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
+    
+            // Ajustar la fecha de inicio a la medianoche del último lunes
+            ultimoLunes.setHours(0, 0, 0, 0);
+            // Ajustar la fecha de fin a las 23:59:59 del último domingo
+            ultimoDomingo.setHours(23, 59, 59, 999);
+    
+            console.log('Último Lunes:', ultimoLunes);
+            console.log('Último Domingo:', ultimoDomingo);
+    
+            // Consulta para obtener los tickets resueltos durante la última semana con fecha de creación y finalización
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion, fechafinalizado')
+                .eq('fkusuario', id)
+                .not('fechafinalizado', 'is', null) // Solo tickets resueltos
+                .gte('fechafinalizado', ultimoLunes.toISOString())
+                .lte('fechafinalizado', ultimoDomingo.toISOString());
+    
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            // Mapeo de los días de la semana a las letras correspondientes
+            const diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    
+            // Inicializamos el contador de horas por día de la semana con letras
+            const horasResolucionPorDia = {
+                'L': { totalHoras: 0, totalTickets: 0 }, // Lunes
+                'M': { totalHoras: 0, totalTickets: 0 }, // Lunes
+                'X': { totalHoras: 0, totalTickets: 0 }, // Martes
+                'J': { totalHoras: 0, totalTickets: 0 }, // Miércoles
+                'V': { totalHoras: 0, totalTickets: 0 }, // Jueves
+                'S': { totalHoras: 0, totalTickets: 0 }, // Viernes
+                'D': { totalHoras: 0, totalTickets: 0 }, // Sábado
+            };
+    
+            // Recorremos los tickets y calculamos el tiempo de resolución en horas
+            data.forEach(ticket => {
+                const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
+                const diaSemanaLetra = diasSemana[diaSemanaResuelto];
+                const fechaCreacion = new Date(ticket.fechacreacion);
+                const fechaFinalizacion = new Date(ticket.fechafinalizado);
+    
+                // Diferencia en milisegundos
+                const diferenciaMs = fechaFinalizacion - fechaCreacion;
+                // Convertimos a horas
+                const diferenciaHoras = diferenciaMs / (1000 * 60 * 60);
+    
+                // Acumulamos las horas y el total de tickets por día
+                horasResolucionPorDia[diaSemanaLetra].totalHoras += diferenciaHoras;
+                horasResolucionPorDia[diaSemanaLetra].totalTickets++;
+            });
+    
+            // Calculamos el promedio de horas por día de la semana
+            const promedioHorasPorDia = {};
+            for (const dia in horasResolucionPorDia) {
+                const { totalHoras, totalTickets } = horasResolucionPorDia[dia];
+                promedioHorasPorDia[dia] = totalTickets > 0 ? (totalHoras / totalTickets).toFixed(2) : 0;
+            }
+    
+            console.log('Promedio de horas por día:', promedioHorasPorDia);
+    
+            return promedioHorasPorDia;
+        } catch (error) {
+            console.error(`Error en obtenerPromedioHorasResolucionPorDiaDeLaSemana: ${error.message}`);
+            throw error;
+        }
+    }
+    
     async obtenerPorcentajeTicketsPorEstado(id) {
         try {
             // Obtener el total de tickets del empleado
