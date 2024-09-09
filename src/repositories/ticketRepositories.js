@@ -168,6 +168,327 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerTicketsPorDiaDeLaSemana(id) {
+        try {
+            // Obtener la fecha actual
+            const hoy = new Date();
+            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
+            const diaSemana = hoy.getDay();
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+            // Calcular la fecha del lunes anterior al último domingo
+            const ultimoLunes = new Date(ultimoDomingo);
+            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
+
+            // Ajustar la fecha de inicio a la medianoche del último lunes
+            ultimoLunes.setHours(0, 0, 0, 0);
+            // Ajustar la fecha de fin a las 23:59:59 del último domingo
+            ultimoDomingo.setHours(23, 59, 59, 999);
+
+            console.log('Último Lunes:', ultimoLunes);
+            console.log('Último Domingo:', ultimoDomingo);
+
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('id, fechacreacion')
+                .eq('fkusuario', id)
+                .gte('fechacreacion', ultimoLunes.toISOString())
+                .lte('fechacreacion', ultimoDomingo.toISOString());
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            // Procesar los datos para contar los tickets por día de la semana
+            const ticketsPorDia = {
+                0: 0, // Lunes
+                1: 0, // Martes
+                2: 0, // Miercoles
+                3: 0, // Jueves
+                4: 0, // Viernes
+                5: 0, // Sabado
+                6: 0  // Domingo
+            };
+
+            data.forEach(ticket => {
+                const diaSemana = new Date(ticket.fechacreacion).getDay();
+                ticketsPorDia[diaSemana]++;
+            });
+
+            console.log('Tickets por día:', ticketsPorDia);
+
+            return ticketsPorDia;
+        } catch (error) {
+            console.error(`Error en obtenerTicketsPorDiaDeLaSemana: ${error.message}`);
+            throw error;
+        }
+    }
+    async obtenerTicketsResueltosPorDiaDeLaSemana(id) {
+        try {
+            // Obtener la fecha actual
+            const hoy = new Date();
+            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
+            const diaSemana = hoy.getDay();
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+            // Calcular la fecha del lunes anterior al último domingo
+            const ultimoLunes = new Date(ultimoDomingo);
+            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
+    
+            // Ajustar la fecha de inicio a la medianoche del último lunes
+            ultimoLunes.setHours(0, 0, 0, 0);
+            // Ajustar la fecha de fin a las 23:59:59 del último domingo
+            ultimoDomingo.setHours(23, 59, 59, 999);
+    
+            console.log('Último Lunes:', ultimoLunes);
+            console.log('Último Domingo:', ultimoDomingo);
+    
+            // Consulta para obtener los tickets resueltos (fechafinalizado) durante la última semana
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('id, fechafinalizado')
+                .eq('fkusuario', id)
+                .not('fechafinalizado', 'is', null) // Aseguramos que tengan fecha de finalización
+                .gte('fechafinalizado', ultimoLunes.toISOString())
+                .lte('fechafinalizado', ultimoDomingo.toISOString());
+    
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            // Inicializamos el contador de tickets por día (0 = Lunes, 6 = Domingo)
+            const ticketsResueltosPorDia = {
+                0: 0, // Lunes
+                1: 0, // Martes
+                2: 0, // Miércoles
+                3: 0, // Jueves
+                4: 0, // Viernes
+                5: 0, // Sábado
+                6: 0  // Domingo
+            };
+    
+            // Recorremos los tickets y los contamos por día de la semana
+            data.forEach(ticket => {
+                const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
+                ticketsResueltosPorDia[diaSemanaResuelto]++;
+            });
+    
+            console.log('Tickets resueltos por día:', ticketsResueltosPorDia);
+    
+            return ticketsResueltosPorDia;
+        } catch (error) {
+            console.error(`Error en obtenerTicketsResueltosPorDiaDeLaSemana: ${error.message}`);
+            throw error;
+        }
+    }
+    async obtenerPromedioHorasResolucionPorDiaDeLaSemana(id) {
+        try {
+            // Obtener la fecha actual
+            const hoy = new Date();
+            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
+            const diaSemana = hoy.getDay();
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+            // Calcular la fecha del lunes anterior al último domingo
+            const ultimoLunes = new Date(ultimoDomingo);
+            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
+    
+            // Ajustar la fecha de inicio a la medianoche del último lunes
+            ultimoLunes.setHours(0, 0, 0, 0);
+            // Ajustar la fecha de fin a las 23:59:59 del último domingo
+            ultimoDomingo.setHours(23, 59, 59, 999);
+    
+            console.log('Último Lunes:', ultimoLunes);
+            console.log('Último Domingo:', ultimoDomingo);
+    
+            // Consulta para obtener los tickets resueltos durante la última semana con fecha de creación y finalización
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion, fechafinalizado')
+                .eq('fkusuario', id)
+                .not('fechafinalizado', 'is', null) // Solo tickets resueltos
+                .gte('fechafinalizado', ultimoLunes.toISOString())
+                .lte('fechafinalizado', ultimoDomingo.toISOString());
+    
+            if (error) {
+                throw new Error(error.message);
+            }
+    
+            // Inicializamos el contador de horas por día de la semana (0 = Lunes, 6 = Domingo)
+            const horasResolucionPorDia = {
+                0: { totalHoras: 0, totalTickets: 0 }, // Lunes
+                1: { totalHoras: 0, totalTickets: 0 }, // Martes
+                2: { totalHoras: 0, totalTickets: 0 }, // Miércoles
+                3: { totalHoras: 0, totalTickets: 0 }, // Jueves
+                4: { totalHoras: 0, totalTickets: 0 }, // Viernes
+                5: { totalHoras: 0, totalTickets: 0 }, // Sábado
+                6: { totalHoras: 0, totalTickets: 0 }  // Domingo
+            };
+    
+            // Recorremos los tickets y calculamos el tiempo de resolución en horas
+            data.forEach(ticket => {
+                const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
+                const fechaCreacion = new Date(ticket.fechacreacion);
+                const fechaFinalizacion = new Date(ticket.fechafinalizado);
+    
+                // Diferencia en milisegundos
+                const diferenciaMs = fechaFinalizacion - fechaCreacion;
+                // Convertimos a horas
+                const diferenciaHoras = diferenciaMs / (1000 * 60 * 60);
+    
+                // Acumulamos las horas y el total de tickets por día
+                horasResolucionPorDia[diaSemanaResuelto].totalHoras += diferenciaHoras;
+                horasResolucionPorDia[diaSemanaResuelto].totalTickets++;
+            });
+    
+            // Calculamos el promedio de horas por día de la semana
+            const promedioHorasPorDia = {};
+            for (const dia in horasResolucionPorDia) {
+                const { totalHoras, totalTickets } = horasResolucionPorDia[dia];
+                promedioHorasPorDia[dia] = totalTickets > 0 ? (totalHoras / totalTickets).toFixed(2) : 0;
+            }
+    
+            console.log('Promedio de horas por día:', promedioHorasPorDia);
+    
+            return promedioHorasPorDia;
+        } catch (error) {
+            console.error(`Error en obtenerPromedioHorasResolucionPorDiaDeLaSemana: ${error.message}`);
+            throw error;
+        }
+    }
+    async obtenerCantidadTicketsPorPrioridad(id) {
+        try {
+            // Consultar cantidad de tickets de prioridad Baja
+            const { data: bajaData, error: bajaError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkprioridad', 1); // Asumiendo que la prioridad Baja tiene el ID 1
+    
+            if (bajaError) {
+                throw new Error(bajaError.message);
+            }
+    
+            // Consultar cantidad de tickets de prioridad Media
+            const { data: mediaData, error: mediaError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkprioridad', 2); // Asumiendo que la prioridad Media tiene el ID 2
+    
+            if (mediaError) {
+                throw new Error(mediaError.message);
+            }
+    
+            // Consultar cantidad de tickets de prioridad Alta
+            const { data: altaData, error: altaError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkprioridad', 3); // Asumiendo que la prioridad Alta tiene el ID 3
+    
+            if (altaError) {
+                throw new Error(altaError.message);
+            }
+    
+            // Consultar cantidad de tickets de prioridad Urgente
+            const { data: urgenteData, error: urgenteError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkprioridad', 4); // Asumiendo que la prioridad Urgente tiene el ID 4
+    
+            if (urgenteError) {
+                throw new Error(urgenteError.message);
+            }
+    
+            // Devolver el conteo de cada prioridad
+            return {
+                baja: bajaData.length,
+                media: mediaData.length,
+                alta: altaData.length,
+                urgente: urgenteData.length
+            };
+        } catch (error) {
+            console.error(`Error en obtenerCantidadTicketsPorPrioridad: ${error.message}`);
+            throw error;
+        }
+    }
+    async obtenerPorcentajeTicketsPorEstado(id) {
+        try {
+            // Obtener el total de tickets del empleado
+            const { data: totalData, error: totalError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id);
+    
+            if (totalError) {
+                throw new Error(totalError.message);
+            }
+    
+            const totalTickets = totalData.length;
+    
+            // Verificar si el empleado tiene tickets
+            if (totalTickets === 0) {
+                return {
+                    abiertos: 0,
+                    cerrados: 0,
+                    esperandoRespuesta: 0
+                };
+            }
+    
+            // Obtener cantidad de tickets en estado Abierto (ej. fkestado 1)
+            const { data: abiertosData, error: abiertosError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkestado', 1); // Suponiendo que '1' es el estado Abierto
+    
+            if (abiertosError) {
+                throw new Error(abiertosError.message);
+            }
+    
+            // Obtener cantidad de tickets en estado Cerrado (ej. fkestado 2)
+            const { data: cerradosData, error: cerradosError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkestado', 2); // Suponiendo que '2' es el estado Cerrado
+    
+            if (cerradosError) {
+                throw new Error(cerradosError.message);
+            }
+    
+            // Obtener cantidad de tickets en estado Esperando respuesta del cliente (ej. fkestado 3)
+            const { data: esperandoData, error: esperandoError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fkestado', 3); // Suponiendo que '3' es el estado Esperando respuesta del cliente
+    
+            if (esperandoError) {
+                throw new Error(esperandoError.message);
+            }
+    
+            // Calcular porcentajes
+            const porcentajeAbiertos = Math.round((abiertosData.length / totalTickets) * 100);
+            const porcentajeCerrados = Math.round((cerradosData.length / totalTickets) * 100);
+            const porcentajeEsperando = Math.round((esperandoData.length / totalTickets) * 100);
+    
+            return {
+                abiertos: porcentajeAbiertos,
+                cerrados: porcentajeCerrados,
+                esperandoRespuesta: porcentajeEsperando
+            };
+        } catch (error) {
+            console.error(`Error en obtenerPorcentajeTicketsPorEstado: ${error.message}`);
+            throw error;
+        }
+    }
+    
     
 }
 

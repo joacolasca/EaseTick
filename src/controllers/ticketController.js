@@ -74,4 +74,50 @@ router.get("/detalleTicket/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener el detalle del ticket: ${e.message}` });
     }
 });
+router.get("/ticketsPorDiaDeLaSemana/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketsPorDia = await svc.obtenerTicketsPorDiaDeLaSemana(id);
+        return res.status(200).json({ success: true, message: ticketsPorDia });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los tickets por día de la semana: ${e.message}` });
+    }
+});
+router.get("/ticketsResueltosPorDiaDeLaSemana/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketsResueltosPorDia = await svc.obtenerTicketsResueltosPorDiaDeLaSemana(id);
+        return res.status(200).json({ success: true, message: ticketsResueltosPorDia });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los tickets resueltos por día de la semana: ${e.message}` });
+    }
+});
+router.get("/promedioHorasResolucionPorDiaDeLaSemana/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const promedioHorasPorDia = await svc.obtenerPromedioHorasResolucionPorDiaDeLaSemana(id);
+        return res.status(200).json({ success: true, message: promedioHorasPorDia });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener el promedio de horas por día de la semana: ${e.message}` });
+    }
+});
+router.get("/cantidadTicketsPorPrioridad/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const cantidadTicketsPorPrioridad = await svc.obtenerCantidadTicketsPorPrioridad(id);
+        return res.status(200).json({ success: true, message: cantidadTicketsPorPrioridad });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener la cantidad de tickets por prioridad: ${e.message}` });
+    }
+});
+router.get("/porcentajeTicketsPorEstado/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const porcentajeTicketsPorEstado = await svc.obtenerPorcentajeTicketsPorEstado(id);
+        return res.status(200).json({ success: true, message: porcentajeTicketsPorEstado });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener el porcentaje de tickets por estado: ${e.message}` });
+    }
+});
+
 module.exports = router;
