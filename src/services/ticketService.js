@@ -84,15 +84,6 @@ class TicketService {
             throw new Error(`Error al obtener tickets resueltos por día de la semana: ${error.message}`);
         }
     }
-    async obtenerPromedioHorasResolucionPorDiaDeLaSemana(id) {
-        try {
-            const repo = new TicketRepository();
-            const promedioHorasPorDia = await repo.obtenerPromedioHorasResolucionPorDiaDeLaSemana(id);
-            return promedioHorasPorDia;
-        } catch (error) {
-            throw new Error(`Error al obtener el promedio de horas por día de la semana: ${error.message}`);
-        }
-    }
     async obtenerCantidadTicketsPorPrioridad(id) {
         try {
             const repo = new TicketRepository();
@@ -109,15 +100,6 @@ class TicketService {
             return porcentajeTicketsPorEstado;
         } catch (error) {
             throw new Error(`Error al obtener el porcentaje de tickets por estado: ${error.message}`);
-        }
-    }
-    async obtenerTicketsSinResolverPorDiaDeLaSemana(id) {
-        try {
-            const repo = new TicketRepository();
-            const ticketsSinResolverPorDia = await repo.obtenerTicketsSinResolverPorDiaDeLaSemana(id);
-            return ticketsSinResolverPorDia;
-        } catch (error) {
-            throw new Error(`Error al obtener tickets sin resolver por día de la semana: ${error.message}`);
         }
     }
     
