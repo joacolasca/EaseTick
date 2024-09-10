@@ -171,52 +171,51 @@ class TicketRepository {
 
     async obtenerTicketsPorDiaDeLaSemana(id) {
         try {
-            // Obtener la fecha actual
             const hoy = new Date();
-            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
             const diaSemana = hoy.getDay();
+    
             // Calcular la fecha del último domingo
             const ultimoDomingo = new Date(hoy);
             ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+    
             // Calcular la fecha del lunes anterior al último domingo
             const ultimoLunes = new Date(ultimoDomingo);
             ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
     
-            // Ajustar la fecha de inicio a la medianoche del último lunes
+            // Ajustar las horas para representar correctamente el rango de fechas
             ultimoLunes.setHours(0, 0, 0, 0);
-            // Ajustar la fecha de fin a las 23:59:59 del último domingo
             ultimoDomingo.setHours(23, 59, 59, 999);
     
-            console.log('Último Lunes:', ultimoLunes);
-            console.log('Último Domingo:', ultimoDomingo);
+            // Convertir las fechas al formato 'YYYY-MM-DD' que acepta PostgreSQL
+            const fechaInicio = ultimoLunes.toISOString().slice(0, 10);
+            const fechaFin = ultimoDomingo.toISOString().slice(0, 10);
     
+            console.log('Último Lunes (inicio):', fechaInicio);
+            console.log('Último Domingo (fin):', fechaFin);
+    
+            // Ejecutar la consulta con las fechas en formato correcto
             const { data, error } = await supabase
                 .from('ticket')
                 .select('id, fechacreacion')
                 .eq('fkusuario', id)
-                .gte('fechacreacion', ultimoLunes.toISOString())
-                .lte('fechacreacion', ultimoDomingo.toISOString());
+                .gte('fechacreacion', fechaInicio)
+                .lte('fechacreacion', fechaFin);
     
             if (error) {
                 throw new Error(error.message);
             }
     
-            // Mapeo de los días de la semana a las letras correspondientes
             const diasSemana = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
     
-            // Inicializar el objeto para contar los tickets por día de la semana
             const ticketsPorDia = {
-                'D': 0, // Domingo
-                'L': 0, // Lunes
-                'M': 0, // Martes
-                'X': 0, // Miércoles
-                'J': 0, // Jueves
-                'V': 0, // Viernes
-                'S': 0  // Sábado
+                'D': 0, 'L': 0, 'M': 0, 'X': 0, 'J': 0, 'V': 0, 'S': 0
             };
     
             data.forEach(ticket => {
-                const diaSemanaNumerico = new Date(ticket.fechacreacion).getDay();
+                const fechaTicket = new Date(ticket.fechacreacion);
+                // Mover la fecha del ticket un día adelante
+                fechaTicket.setDate(fechaTicket.getDate() + 1);
+                const diaSemanaNumerico = fechaTicket.getDay();
                 const diaSemanaLetra = diasSemana[diaSemanaNumerico];
                 ticketsPorDia[diaSemanaLetra]++;
             });
@@ -229,58 +228,56 @@ class TicketRepository {
             throw error;
         }
     }
+    
 
     async obtenerTicketsResueltosPorDiaDeLaSemana(id) {
         try {
-            // Obtener la fecha actual
             const hoy = new Date();
-            // Obtener el día de la semana (0 = Domingo, 6 = Sábado)
             const diaSemana = hoy.getDay();
+    
             // Calcular la fecha del último domingo
             const ultimoDomingo = new Date(hoy);
             ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+    
             // Calcular la fecha del lunes anterior al último domingo
             const ultimoLunes = new Date(ultimoDomingo);
             ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
     
-            // Ajustar la fecha de inicio a la medianoche del último lunes
+            // Ajustar las horas para representar correctamente el rango de fechas
             ultimoLunes.setHours(0, 0, 0, 0);
-            // Ajustar la fecha de fin a las 23:59:59 del último domingo
             ultimoDomingo.setHours(23, 59, 59, 999);
     
-            console.log('Último Lunes:', ultimoLunes);
-            console.log('Último Domingo:', ultimoDomingo);
+            // Convertir las fechas al formato 'YYYY-MM-DD' que acepta PostgreSQL
+            const fechaInicio = ultimoLunes.toISOString().slice(0, 10);
+            const fechaFin = ultimoDomingo.toISOString().slice(0, 10);
     
-            // Consulta para obtener los tickets resueltos (fechafinalizado) durante la última semana
+            console.log('Último Lunes (inicio):', fechaInicio);
+            console.log('Último Domingo (fin):', fechaFin);
+    
+            // Ejecutar la consulta con las fechas en formato correcto
             const { data, error } = await supabase
                 .from('ticket')
                 .select('id, fechafinalizado')
                 .eq('fkusuario', id)
-                .not('fechafinalizado', 'is', null) // Aseguramos que tengan fecha de finalización
-                .gte('fechafinalizado', ultimoLunes.toISOString())
-                .lte('fechafinalizado', ultimoDomingo.toISOString());
+                .not('fechafinalizado', 'is', null)
+                .gte('fechafinalizado', fechaInicio)
+                .lte('fechafinalizado', fechaFin);
     
             if (error) {
                 throw new Error(error.message);
             }
     
-            // Mapeo de los días de la semana a las letras correspondientes
-            const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+            const diasSemana = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
     
-            // Inicializamos el contador de tickets por día con letras
             const ticketsResueltosPorDia = {
-                'D': 0, // Domingo
-                'L': 0, // Lunes
-                'M': 0, // Martes
-                'X': 0, // Miércoles
-                'J': 0, // Jueves
-                'V': 0, // Viernes
-                'S': 0  // Sábado
+                'D': 0, 'L': 0, 'M': 0, 'X': 0, 'J': 0, 'V': 0, 'S': 0
             };
     
-            // Recorremos los tickets y los contamos por día de la semana usando las letras
             data.forEach(ticket => {
-                const diaSemanaResuelto = new Date(ticket.fechafinalizado).getDay();
+                const fechaTicket = new Date(ticket.fechafinalizado);
+                // Mover la fecha del ticket un día adelante
+                fechaTicket.setDate(fechaTicket.getDate() + 1);
+                const diaSemanaResuelto = fechaTicket.getDay();
                 const diaSemanaLetra = diasSemana[diaSemanaResuelto];
                 ticketsResueltosPorDia[diaSemanaLetra]++;
             });
@@ -293,7 +290,6 @@ class TicketRepository {
             throw error;
         }
     }
-    
     
     async obtenerCantidadTicketsPorPrioridad(id) {
         try {
