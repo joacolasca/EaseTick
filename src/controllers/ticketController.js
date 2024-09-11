@@ -110,6 +110,22 @@ router.get("/porcentajeTicketsPorEstado/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener el porcentaje de tickets por estado: ${e.message}` });
     }
 });
-
-
+router.get("/cantidadTicketsPorTipo/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const cantidadTicketsPorTipo = await svc.obtenerCantidadTicketsPorTipo(id);
+        return res.status(200).json({ success: true, message: cantidadTicketsPorTipo });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener la cantidad de tickets por tipo: ${e.message}` });
+    }
+});
+router.get("/calificacionesPorUsuario/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const calificacionesPorUsuario = await svc.obtenerCalificacionesPorUsuario(id);
+        return res.status(200).json({ success: true, message: calificacionesPorUsuario });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener la cantidad de calificaciones por usuario: ${e.message}` });
+    }
+});
 module.exports = router;

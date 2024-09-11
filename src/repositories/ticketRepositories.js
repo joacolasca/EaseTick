@@ -422,8 +422,118 @@ class TicketRepository {
             throw error;
         }
     }
+    async obtenerCantidadTicketsPorTipo(id) {
+        
+            // Consultar cantidad de tickets de prioridad Baja
+            const { data: preguntaData, error: preguntaError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fktipo', 1); // Asumiendo que la prioridad Baja tiene el ID 1
     
+            if (preguntaError) {
+                throw new Error(preguntaError.message);
+            }
     
+            // Consultar cantidad de tickets de prioridad Media
+            const { data: incidenteData, error: incidenteError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fktipo', 2); // Asumiendo que la prioridad Media tiene el ID 2
+    
+            if (incidenteError) {
+                throw new Error(incidenteError.message);
+            }
+            const { data: sugerenciaData, error: sugerenciaError } = await supabase
+            .from('ticket')
+            .select('id')
+            .eq('fkusuario', id)
+            .eq('fktipo', 3); // Asumiendo que la prioridad Urgente tiene el ID 4
+
+        if (sugerenciaError) {
+            throw new Error(sugerenciaError.message);
+        }
+            // Consultar cantidad de tickets de prioridad Alta
+            const { data: mantenimientoData, error: mantenimientoError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', id)
+                .eq('fktipo', 4); // Asumiendo que la prioridad Alta tiene el ID 3
+    
+            if (mantenimientoError) {
+                throw new Error(mantenimientoError.message);
+            }
+    
+            // Consultar cantidad de tickets de prioridad Urgente
+            
+            try {
+                const { data: reclamoData, error: reclamoError } = await supabase
+                    .from('ticket')
+                    .select('id')
+                    .eq('fkusuario', id)
+                    .eq('fktipo', 5); // Asumiendo que la prioridad Baja tiene el ID 1
+        
+                if (reclamoError) {
+                    throw new Error(reclamoError.message);
+                }
+            // Devolver el conteo de cada prioridad
+            return {
+                Pregunta: preguntaData.length,
+                Incidente: incidenteData.length,
+                Sugerencia: sugerenciaData.length,
+                Mantenimiento: mantenimientoData.length,
+                Reclamo: reclamoData.length
+            };
+        } catch (error) {
+            console.error(`Error en obtenerCantidadTicketsPorPrioridad: ${error.message}`);
+            throw error;
+        }
+    }
+async obtenerCalificacionesPorUsuario(id) {
+    try {
+        const { data, error } = await supabase
+            .from('calificacion')
+            .select('puntaje')
+            .eq('fkusuario', id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        let puntajeUno = 0;
+        let puntajeDos = 0;
+        let puntajeTres = 0;
+        let puntajeCuatro = 0;
+        let puntajeCinco = 0;
+
+        data.forEach(item => {
+            if (item.puntaje == 1) {
+                puntajeUno++;
+            } else if (item.puntaje == 2) {
+                puntajeDos++;
+            } else if (item.puntaje == 3) {
+                puntajeTres++;
+            } else if (item.puntaje == 4) {
+                puntajeCuatro++;
+            } else if (item.puntaje == 5) {
+                puntajeCinco++;
+            }
+        });
+
+        return {
+            1: puntajeUno,
+            2: puntajeDos,
+            3: puntajeTres,
+            4: puntajeCuatro,
+            5: puntajeCinco,
+
+        };
+    } catch (error) {
+        console.error(`Hubo un error al obtener la cantidad de calificaciones por usuario: ${error.message}`);
+        throw error;
+    }
+}
 }
 
 module.exports = TicketRepository;

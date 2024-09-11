@@ -102,7 +102,24 @@ class TicketService {
             throw new Error(`Error al obtener el porcentaje de tickets por estado: ${error.message}`);
         }
     }
-    
+    async obtenerCantidadTicketsPorTipo(id) {
+        try {
+            const repo = new TicketRepository();
+            const cantidadTicketsPorTipo = await repo.obtenerCantidadTicketsPorTipo(id);
+            return cantidadTicketsPorTipo;
+        } catch (error) {
+            throw new Error(`Error al obtener la cantidad de tickets por tipo: ${error.message}`);
+        }
+    }
+    async obtenerCalificacionesPorUsuario(id) {
+        try {
+            const repo = new TicketRepository();
+            const calificacionesPorUsuario = await repo.obtenerCalificacionesPorUsuario(id);
+            return calificacionesPorUsuario;
+        } catch (error) {
+            throw new Error(`Hubo un error al obtener la cantidad de calificaciones por usuario: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;
