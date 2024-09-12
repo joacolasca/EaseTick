@@ -1,3 +1,4 @@
+
 const { Router } = require('express');
 require('dotenv').config();
 const TicketService = require('../services/ticketService');
@@ -126,6 +127,41 @@ router.get("/calificacionesPorUsuario/:id", async (req, res) => {
         return res.status(200).json({ success: true, message: calificacionesPorUsuario });
     } catch (e) {
         return res.status(500).send({ error: `Hubo un error al obtener la cantidad de calificaciones por usuario: ${e.message}` });
+    }
+});
+router.post("/agregarRecordatorio", async (req, res) => {
+    const { texto,fkusuario } = req.body;
+    try {
+        const recordatorio = await svc.agregarRecordatorio(texto, fkusuario);
+        return res.status(200).json({ success: true, message: 'Recordatorio agregado con éxito', data: recordatorio });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al agregar el recordatorio: ${e.message}` });
+    }
+});
+
+
+
+
+
+// Obtener los recordatorios de un usuario
+router.get("/obtenerRecordatorios/:fkusuario", async (req, res) => {
+    const { fkusuario } = req.params;
+    try {
+        const recordatorios = await svc.obtenerRecordatorios(fkusuario);
+        return res.status(200).json({ success: true, message: recordatorios });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los recordatorios: ${e.message}` });
+    }
+});
+
+// Eliminar un recordatorio
+router.delete("/eliminarRecordatorio/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const resultado = await svc.eliminarRecordatorio(id);
+        return res.status(200).json({ success: true, message: 'Recordatorio eliminado con éxito' });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al eliminar el recordatorio: ${e.message}` });
     }
 });
 module.exports = router;

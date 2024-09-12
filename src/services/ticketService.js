@@ -120,6 +120,39 @@ class TicketService {
             throw new Error(`Hubo un error al obtener la cantidad de calificaciones por usuario: ${error.message}`);
         }
     }
+    agregarRecordatorio = async (texto,fkusuario) => {
+        try {
+            const repo = new TicketRepository();
+            const recordatorio = await repo.agregarRecordatorio(texto,fkusuario);
+            return recordatorio;
+        } catch (error) {
+            throw new Error(`Error al agregar recordatorio: ${error.message}`);
+        }
+    }
+
+
+
+    // Obtener los recordatorios de un usuario
+    obtenerRecordatorios = async (fkusuario) => {
+        try {
+            const repo = new TicketRepository();
+            const recordatorios = await repo.obtenerRecordatorios(fkusuario);
+            return recordatorios;
+        } catch (error) {
+            throw new Error(`Error al obtener recordatorios: ${error.message}`);
+        }
+    }
+
+    // Eliminar un recordatorio
+    eliminarRecordatorio = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const resultado = await repo.eliminarRecordatorio(id);
+            return resultado;
+        } catch (error) {
+            throw new Error(`Error al eliminar recordatorio: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

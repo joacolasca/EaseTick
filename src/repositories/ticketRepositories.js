@@ -534,6 +534,63 @@ async obtenerCalificacionesPorUsuario(id) {
         throw error;
     }
 }
+async agregarRecordatorio(texto,fkusuario) {
+    try {
+        const { data, error } = await supabase
+            .from('recordatorio')
+            .insert([
+                { texto, fkusuario }
+            ]);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error(`Error al agregar recordatorio: ${error.message}`);
+        throw error;
+    }
 }
 
+
+// Obtener todos los recordatorios de un usuario
+async obtenerRecordatorios(fkusuario) {
+    try {
+        const { data, error } = await supabase
+            .from('recordatorio')
+            .select('*')
+            .eq('fkusuario', fkusuario);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error(`Error al obtener recordatorios: ${error.message}`);
+        throw error;
+    }
+}
+
+// Eliminar un recordatorio
+async eliminarRecordatorio(id) {
+    try {
+        const { data, error } = await supabase
+            .from('recordatorio')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error(`Error al eliminar recordatorio: ${error.message}`);
+        throw error;
+    }
+}
+}
+    
 module.exports = TicketRepository;
