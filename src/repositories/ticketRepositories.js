@@ -534,15 +534,16 @@ async obtenerCalificacionesPorUsuario(id) {
         throw error;
     }
 }
-async agregarRecordatorio(texto,fkusuario) {
+async agregarRecordatorio(texto, fkusuario) {
     try {
+        console.log("Datos para insertar:", texto, fkusuario); // Verifica qué datos estás enviando a la BD
+        
         const { data, error } = await supabase
             .from('recordatorio')
-            .insert([
-                { texto, fkusuario }
-            ]);
+            .insert([{ texto, fkusuario }]);
 
         if (error) {
+            console.error(`Error al agregar recordatorio: ${error.message}`);
             throw new Error(error.message);
         }
 
@@ -552,7 +553,6 @@ async agregarRecordatorio(texto,fkusuario) {
         throw error;
     }
 }
-
 
 // Obtener todos los recordatorios de un usuario
 async obtenerRecordatorios(fkusuario) {
@@ -591,6 +591,31 @@ async eliminarRecordatorio(id) {
         throw error;
     }
 }
-}
+
     
+async obtenerEmpresaAsignadaAlUsuario(idUsuario) {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .select(`
+                fkempresa,
+                empresa(
+                    nombre,
+                    tipo,
+                    correoelectronico
+                )
+            `)
+            .eq('id', idUsuario); // Buscamos el usuario con su ID
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error(`Error en obtenerEmpresaAsignadaAlUsuario: ${error.message}`);
+        throw error;
+    }
+}
+}
 module.exports = TicketRepository;

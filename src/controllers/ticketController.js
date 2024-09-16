@@ -130,7 +130,14 @@ router.get("/calificacionesPorUsuario/:id", async (req, res) => {
     }
 });
 router.post("/agregarRecordatorio", async (req, res) => {
-    const { texto,fkusuario } = req.body;
+    console.log(req.body); // Verifica que el cuerpo de la solicitud tiene los datos correctos
+
+    const { texto, fkusuario } = req.body;
+
+    if (!texto || !fkusuario) {
+        return res.status(400).json({ success: false, message: 'Faltan campos requeridos: texto o fkusuario' });
+    }
+
     try {
         const recordatorio = await svc.agregarRecordatorio(texto, fkusuario);
         return res.status(200).json({ success: true, message: 'Recordatorio agregado con éxito', data: recordatorio });
@@ -138,10 +145,6 @@ router.post("/agregarRecordatorio", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al agregar el recordatorio: ${e.message}` });
     }
 });
-
-
-
-
 
 // Obtener los recordatorios de un usuario
 router.get("/obtenerRecordatorios/:fkusuario", async (req, res) => {
@@ -162,6 +165,15 @@ router.delete("/eliminarRecordatorio/:id", async (req, res) => {
         return res.status(200).json({ success: true, message: 'Recordatorio eliminado con éxito' });
     } catch (e) {
         return res.status(500).send({ error: `Hubo un error al eliminar el recordatorio: ${e.message}` });
+    }
+});
+router.get("/empresaAsignada/:idUsuario", async (req, res) => {
+    const { idUsuario } = req.params;
+    try {
+        const empresa = await svc.obtenerEmpresaAsignadaAlUsuario(idUsuario);
+        return res.status(200).json({ success: true, message: empresa });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener la empresa del usuario: ${e.message}` });
     }
 });
 module.exports = router;
