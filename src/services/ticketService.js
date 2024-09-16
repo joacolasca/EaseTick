@@ -120,16 +120,15 @@ class TicketService {
             throw new Error(`Hubo un error al obtener la cantidad de calificaciones por usuario: ${error.message}`);
         }
     }
-    agregarRecordatorio = async (texto,fkusuario) => {
+    async agregarRecordatorio(texto, fkusuario) {
         try {
             const repo = new TicketRepository();
-            const recordatorio = await repo.agregarRecordatorio(texto,fkusuario);
-            return recordatorio;
+            const resultado = await repo.agregarRecordatorio(texto, fkusuario);
+            return resultado;
         } catch (error) {
             throw new Error(`Error al agregar recordatorio: ${error.message}`);
         }
     }
-
 
 
     // Obtener los recordatorios de un usuario

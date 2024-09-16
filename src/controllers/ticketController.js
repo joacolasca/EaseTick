@@ -129,18 +129,16 @@ router.get("/calificacionesPorUsuario/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener la cantidad de calificaciones por usuario: ${e.message}` });
     }
 });
-router.post("/agregarRecordatorio", async (req, res) => {
-    console.log(req.body); // Verifica que el cuerpo de la solicitud tiene los datos correctos
-
+router.post("/agregar", async (req, res) => {
     const { texto, fkusuario } = req.body;
-
-    if (!texto || !fkusuario) {
-        return res.status(400).json({ success: false, message: 'Faltan campos requeridos: texto o fkusuario' });
-    }
-
+    
     try {
-        const recordatorio = await svc.agregarRecordatorio(texto, fkusuario);
-        return res.status(200).json({ success: true, message: 'Recordatorio agregado con éxito', data: recordatorio });
+        const resultado = await svc.agregarRecordatorio(texto, fkusuario);
+        return res.status(200).json({ 
+            success: true, 
+            recordatorio: resultado.recordatorio, 
+            usuario: resultado.usuario 
+        });
     } catch (e) {
         return res.status(500).send({ error: `Hubo un error al agregar el recordatorio: ${e.message}` });
     }
