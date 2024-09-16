@@ -153,15 +153,25 @@ class TicketService {
             throw new Error(`Error al eliminar recordatorio: ${error.message}`);
         }
     }
-    async obtenerEmpresaAsignadaAlUsuario(idUsuario) {
+    obtenerEmpresasClientesPorUsuario = async (idUsuario) => {
         try {
             const repo = new TicketRepository();
-            const empresa = await repo.obtenerEmpresaAsignadaAlUsuario(idUsuario);
-            return empresa;
+            const empresas = await repo.obtenerEmpresasClientesPorUsuario(idUsuario);
+            return empresas;
         } catch (error) {
-            throw new Error(`Error al obtener la empresa del usuario: ${error.message}`);
+            throw new Error(`Error al obtener las empresas clientes del usuario: ${error.message}`);
         }
     }
+    obtenerEmpleadosYTicketsPorUsuario = async (idUsuario) => {
+        try {
+            const repo = new TicketRepository();
+            const empleados = await repo.obtenerEmpleadosYTicketsPorUsuario(idUsuario);
+            return empleados;
+        } catch (error) {
+            throw new Error(`Error al obtener los empleados y sus tickets: ${error.message}`);
+        }
+    }
+
     }
 
 module.exports = TicketService;

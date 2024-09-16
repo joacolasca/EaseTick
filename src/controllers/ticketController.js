@@ -167,13 +167,22 @@ router.delete("/eliminarRecordatorio/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al eliminar el recordatorio: ${e.message}` });
     }
 });
-router.get("/empresaAsignada/:idUsuario", async (req, res) => {
-    const { idUsuario } = req.params;
+router.get("/empresasClientes/:id", async (req, res) => {
+    const { id } = req.params;
     try {
-        const empresa = await svc.obtenerEmpresaAsignadaAlUsuario(idUsuario);
-        return res.status(200).json({ success: true, message: empresa });
+        const empresas = await svc.obtenerEmpresasClientesPorUsuario(id);
+        return res.status(200).json({ success: true, message: empresas });
     } catch (e) {
-        return res.status(500).send({ error: `Hubo un error al obtener la empresa del usuario: ${e.message}` });
+        return res.status(500).send({ error: `Hubo un error al obtener las empresas clientes: ${e.message}` });
+    }
+});
+router.get("/empleadosYTickets/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const empleados = await svc.obtenerEmpleadosYTicketsPorUsuario(id);
+        return res.status(200).json({ success: true, message: empleados });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los empleados y tickets: ${e.message}` });
     }
 });
 module.exports = router;

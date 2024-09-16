@@ -591,31 +591,85 @@ async eliminarRecordatorio(id) {
         throw error;
     }
 }
+    obtenerEmpresasClientesPorUsuario = async (idUsuario) => {
+        try {
+            // Primero obtenemos el fkEmpresa del usuario logeado
+            const { data: empresaUsuario, error: errorUsuario } = await supabase
+                .from('usuario')
+                .select('fkempresa')
+                .eq('id', idUsuario)
+                .single();  // single() para obtener un único resultado
 
-    
-async obtenerEmpresaAsignadaAlUsuario(idUsuario) {
+            if (errorUsuario) {
+                throw new Error(errorUsuario.message);
+            }
+
+            const fkEmpresa = empresaUsuario.fkempresa;
+
+            // Ahora consultamos las empresas clientes usando el fkEmpresa
+            const { data, error } = await supabase
+                .from('empresaCliente')
+                .select('fkCliente(id, nombre, tipo, correoelectronico)')
+                .eq('fkEmpresa', fkEmpresa);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error(`Error en obtenerEmpresasClientesPorUsuario: ${error.message}`);
+            throw error;
+        }
+    }
+    // Repository
+    obtenerEmpleadosYTicketsPorUsuario = async (idUsuario) => {
     try {
+        // Primero obtenemos el fkEmpresa del usuario logeado
+        const { data: empresaUsuario, error: errorUsuario } = await supabase
+            .from('usuario')
+            .select('fkempresa')
+            .eq('id', idUsuario)
+            .single();  // single() para obtener un único resultado
+
+        if (errorUsuario) {
+            throw new Error(errorUsuario.message);
+        }
+
+        const fkEmpresa = empresaUsuario.fkempresa;
+
+        // Ahora consultamos los empleados que pertenecen a la misma empresa
         const { data, error } = await supabase
             .from('usuario')
-            .select(`
-                fkempresa,
-                empresa(
-                    nombre,
-                    tipo,
-                    correoelectronico
-                )
-            `)
-            .eq('id', idUsuario); // Buscamos el usuario con su ID
+            .select(`id, nombre, correoelectronico, calificacion(puntaje), ticket(id, asunto, fkestado)`)
+            .eq('fkempresa', fkEmpresa);
 
         if (error) {
             throw new Error(error.message);
         }
 
-        return data;
+        // Procesamos los datos para calcular promedio de calificaciones y total de tickets
+        const empleados = data.reduce((acc, empleado) => {
+            const totalTickets = empleado.ticket.length;
+            const calificaciones = empleado.calificacion.map(c => c.puntaje);
+            const promedioCalificacion = calificaciones.length > 0 ? calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length : 0;
+
+            acc.push({
+                nombre: empleado.nombre,
+                email: empleado.correoelectronico,
+                calificacion: `${Math.round(promedioCalificacion)}/5`,
+                ticketsAsignados: totalTickets
+            });
+
+            return acc;
+        }, []);
+
+        return empleados;
     } catch (error) {
-        console.error(`Error en obtenerEmpresaAsignadaAlUsuario: ${error.message}`);
+        console.error(`Error en obtenerEmpleadosYTicketsPorUsuario: ${error.message}`);
         throw error;
     }
 }
+
 }
 module.exports = TicketRepository;
