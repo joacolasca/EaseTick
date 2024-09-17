@@ -534,9 +534,8 @@ async obtenerCalificacionesPorUsuario(id) {
         throw error;
     }
 }
-/*async agregarRecordatorio(texto, idUsuario) {
+async agregarRecordatorio(texto, idUsuario) {
     try {
-        // Validamos si el usuario existe en la tabla usuario
         const { data: usuarioData, error: usuarioError } = await supabase
             .from('usuario')
             .select('*')
@@ -547,7 +546,6 @@ async obtenerCalificacionesPorUsuario(id) {
             throw new Error('Usuario no encontrado.');
         }
 
-        // Si el usuario existe, insertamos el recordatorio
         const { data, error } = await supabase
             .from('recordatorio')
             .insert([{ texto: texto, fkusuario: idUsuario }]);
@@ -561,8 +559,7 @@ async obtenerCalificacionesPorUsuario(id) {
         console.error(`Error en agregarRecordatorio: ${error.message}`);
         throw error;
     }
-}*/
-// Obtener todos los recordatorios de un usuario
+}
 async obtenerRecordatorios(fkusuario) {
     try {
         const { data, error } = await supabase
