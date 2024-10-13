@@ -22,12 +22,15 @@ const login = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        return res.json({ token });
+        // Retornar el token junto con el fkrol
+        return res.json({ 
+            token,
+            fkrol: usuario.fkrol // Retornamos también el fkrol
+        });
     } catch (error) {
         console.error('Error al iniciar sesión:', error);
         return res.status(500).json({ message: 'Error interno del servidor' });
     }
 };
-
 
 module.exports = { login };
