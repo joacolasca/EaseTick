@@ -190,9 +190,6 @@ class TicketRepository {
             const fechaInicio = ultimoLunes.toISOString().slice(0, 10);
             const fechaFin = ultimoDomingo.toISOString().slice(0, 10);
     
-            console.log('Último Lunes (inicio):', fechaInicio);
-            console.log('Último Domingo (fin):', fechaFin);
-    
             // Ejecutar la consulta con las fechas en formato correcto
             const { data, error } = await supabase
                 .from('ticket')
@@ -220,7 +217,6 @@ class TicketRepository {
                 ticketsPorDia[diaSemanaLetra]++;
             });
     
-            console.log('Tickets por día:', ticketsPorDia);
     
             return ticketsPorDia;
         } catch (error) {
@@ -251,8 +247,6 @@ class TicketRepository {
             const fechaInicio = ultimoLunes.toISOString().slice(0, 10);
             const fechaFin = ultimoDomingo.toISOString().slice(0, 10);
     
-            console.log('Último Lunes (inicio):', fechaInicio);
-            console.log('Último Domingo (fin):', fechaFin);
     
             // Ejecutar la consulta con las fechas en formato correcto
             const { data, error } = await supabase
@@ -282,7 +276,6 @@ class TicketRepository {
                 ticketsResueltosPorDia[diaSemanaLetra]++;
             });
     
-            console.log('Tickets resueltos por día:', ticketsResueltosPorDia);
     
             return ticketsResueltosPorDia;
         } catch (error) {
@@ -675,6 +668,25 @@ async eliminarRecordatorio(id) {
         throw error;
     }
 }
+async obtenerMensajesDeTicket(idTicket) {
+    try {
+        const { data, error } = await supabase
+            .from('mensaje')
+            .select('*')
+            .eq('fkticket', idTicket)
+            .order('fechaCreacion', { ascending: true });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+        return data;
+    } catch (error) {
+        console.error(`Error al obtener mensajes del ticket: ${error.message}`);
+        throw error;
+    }
+}
+
 
 }
+
 module.exports = TicketRepository;

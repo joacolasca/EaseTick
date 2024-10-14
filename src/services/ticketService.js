@@ -170,6 +170,17 @@ class TicketService {
             throw new Error(`Error al obtener los empleados y sus tickets: ${error.message}`);
         }
     }
+    async obtenerMensajesDeTicket(idTicket) {
+        try {
+            const repo = new TicketRepository();
+            const mensajes = await repo.obtenerMensajesDeTicket(idTicket);
+            return mensajes;
+        } catch (error) {
+            throw new Error(`Error al obtener mensajes del ticket: ${error.message}`);
+        }
+    }
+
+    
 
     }
 

@@ -183,4 +183,21 @@ router.get("/empleadosYTickets/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener los empleados y tickets: ${e.message}` });
     }
 });
+router.get("/:idTicket/mensajes", async (req, res) => {
+    const { idTicket } = req.params;  // Aquí se captura el idTicket desde la URL
+    try {
+        if (!idTicket) {
+            throw new Error("idTicket no proporcionado");
+        }
+        const mensajes = await svc.obtenerMensajesDeTicket(idTicket);
+        return res.status(200).json({ success: true, mensajes });
+    } catch (e) {
+        return res.status(500).json({ error: `Error al obtener mensajes del ticket: ${e.message}` });
+    }
+});
+
+
+
+
+
 module.exports = router;
