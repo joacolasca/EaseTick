@@ -170,6 +170,29 @@ class TicketService {
             throw new Error(`Error al obtener los empleados y sus tickets: ${error.message}`);
         }
     }
+
+    crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => {
+        try {
+            const repo = new TicketRepository();
+            const resultado = await repo.crearTicket(asunto, mensaje, idCliente, idEmpresa, tipo, prioridad);
+            return resultado;
+        } catch (error) {
+            throw new Error(`Error al crear ticket: ${error.message}`);
+        }
+    }
+
+    responderTicket = async (idTicket, mensaje, idUsuario, esEmpleado) => {
+        try {
+            if (!idTicket) {
+                throw new Error("idTicket es requerido");
+            }
+            const repo = new TicketRepository();
+            const resultado = await repo.responderTicket(idTicket, mensaje, idUsuario, esEmpleado);
+            return resultado;
+        } catch (error) {
+            throw new Error(`Error al responder ticket: ${error.message}`);
+        }
+    }
     async obtenerMensajesDeTicket(idTicket) {
         try {
             const repo = new TicketRepository();
@@ -179,9 +202,6 @@ class TicketService {
             throw new Error(`Error al obtener mensajes del ticket: ${error.message}`);
         }
     }
-
-    
-
-    }
+}
 
 module.exports = TicketService;

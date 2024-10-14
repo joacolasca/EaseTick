@@ -183,6 +183,34 @@ router.get("/empleadosYTickets/:id", async (req, res) => {
         return res.status(500).send({ error: `Hubo un error al obtener los empleados y tickets: ${e.message}` });
     }
 });
+
+router.post("/crear", async (req, res) => {
+    const { asunto, mensaje, idCliente, idEmpresa, tipo, prioridad } = req.body;
+    try {
+        const ticketService = new TicketService();
+        const resultado = await ticketService.crearTicket(asunto, mensaje, idCliente, idEmpresa, tipo, prioridad);
+        return res.status(200).json({ success: true, data: resultado });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al crear el ticket: ${e.message}` });
+    }
+});
+
+router.post("/responder", async (req, res) => {
+    const { idTicket, mensaje, idUsuario, esEmpleado } = req.body;
+    
+    if (!idTicket) {
+        return res.status(400).json({ error: "idTicket es requerido" });
+    }
+
+    try {
+        const ticketService = new TicketService();
+        const resultado = await ticketService.responderTicket(idTicket, mensaje, idUsuario, esEmpleado);
+        return res.status(200).json({ success: true, data: resultado });
+    } catch (e) {
+        return res.status(500).json({ error: `Error al responder el ticket: ${e.message}` });
+    }
+});
+
 router.get("/:idTicket/mensajes", async (req, res) => {
     const { idTicket } = req.params;  // Aquí se captura el idTicket desde la URL
     try {
@@ -195,9 +223,5 @@ router.get("/:idTicket/mensajes", async (req, res) => {
         return res.status(500).json({ error: `Error al obtener mensajes del ticket: ${e.message}` });
     }
 });
-
-
-
-
 
 module.exports = router;

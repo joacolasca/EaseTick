@@ -668,13 +668,102 @@ async eliminarRecordatorio(id) {
         throw error;
     }
 }
-async obtenerMensajesDeTicket(idTicket) {
+crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad, fkempleado) => {
+    try {
+        const { data, error } = await supabase
+            .from('ticket')
+            .insert([
+                { 
+                    asunto,
+                    fktipo: tipo,
+                    fkestado: 1,
+                    fkprioridad: prioridad,
+                    fkusuario: idCliente,
+                    fkempresa: idEmpresa,
+                    fechacreacion: new Date().toISOString()
+                }
+            ])
+            .select()
+            .single();
+
+        if (error) throw new Error(error.message);
+
+        const ticketId = data.id;
+
+        const { data: mensajeData, error: mensajeError } = await supabase
+            .from('mensaje')
+            .insert([
+                {
+                    fkticket: ticketId,
+                    fkCliente: idCliente,
+                    contenido: mensaje,
+                    fechacreacion: new Date().toISOString(),
+                    fkEmpleado: null   // Null porque es el cliente quien crea el ticket
+                }
+            ])
+            .select();
+
+        if (mensajeError) throw new Error(mensajeError.message);
+
+        return { ticket: data, mensaje: mensajeData };
+    } catch (error) {
+        console.error(`Error en crearTicket: ${error.message}`);
+        throw error;
+    }
+}
+
+responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
+    try {
+        if (!idTicket) {
+            throw new Error("idTicket es requerido");
+        }
+
+        // Primero, verificamos si el ticket existe
+        const { data: ticketData, error: ticketError } = await supabase
+            .from('ticket')
+            .select('*')
+            .eq('id', idTicket)
+            .single();
+
+        if (ticketError) throw new Error(`Ticket no encontrado: ${ticketError.message}`);
+
+        // Luego, insertamos el nuevo mensaje
+        const { data, error } = await supabase
+            .from('mensaje')
+            .insert([
+                {
+                    fkticket: idTicket,
+                    fkCliente: null,
+                    contenido: mensaje,
+                    fechacreacion: new Date().toISOString(),
+                    fkEmpleado: esEmpleado 
+                }
+            ])
+            .select();
+        if (error) throw new Error(`Error al insertar mensaje: ${error.message}`);
+
+        // Actualizamos el estado del ticket
+        const nuevoEstado = esEmpleado ? 1 : 3; // 1: abierto (esperando respuesta del cliente), 3: esperando respuesta del empleado
+        const { error: updateError } = await supabase
+            .from('ticket')
+            .update({ fkestado: nuevoEstado })
+            .eq('id', idTicket);
+
+        if (updateError) throw new Error(`Error al actualizar el estado del ticket: ${updateError.message}`);
+
+        return { mensaje: data, ticket: ticketData };
+    } catch (error) {
+        console.error(`Error en responderTicket: ${error.message}`);
+        throw error;
+    }
+}
+  async obtenerMensajesDeTicket(idTicket) {
     try {
         const { data, error } = await supabase
             .from('mensaje')
             .select('*')
             .eq('fkticket', idTicket)
-            .order('fechaCreacion', { ascending: true });
+            .order('fechacreacion', { ascending: true });
 
         if (error) {
             throw new Error(error.message);
@@ -685,8 +774,9 @@ async obtenerMensajesDeTicket(idTicket) {
         throw error;
     }
 }
-
-
 }
+
+
+
 
 module.exports = TicketRepository;
