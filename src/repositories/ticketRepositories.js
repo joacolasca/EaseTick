@@ -1,3 +1,4 @@
+const ticketService = require('../services/ticketService');
 const supabase = require('../configs/supabase');
 class TicketRepository {
     obtenerTicketsDeEmpleado = async (id) => {

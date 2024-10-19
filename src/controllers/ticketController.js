@@ -195,6 +195,7 @@ router.post("/crear", async (req, res) => {
     }
 });
 
+
 router.post("/responder", async (req, res) => {
     const { idTicket, mensaje, idUsuario, esEmpleado } = req.body;
     
