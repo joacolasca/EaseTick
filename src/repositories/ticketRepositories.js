@@ -592,12 +592,11 @@ async eliminarRecordatorio(id) {
 }
     obtenerEmpresasClientesPorUsuario = async (idUsuario) => {
         try {
-            // Primero obtenemos el fkEmpresa del usuario logeado
             const { data: empresaUsuario, error: errorUsuario } = await supabase
                 .from('usuario')
                 .select('fkempresa')
                 .eq('id', idUsuario)
-                .single();  // single() para obtener un único resultado
+                .single();  
 
             if (errorUsuario) {
                 throw new Error(errorUsuario.message);
@@ -605,7 +604,6 @@ async eliminarRecordatorio(id) {
 
             const fkEmpresa = empresaUsuario.fkempresa;
 
-            // Ahora consultamos las empresas clientes usando el fkEmpresa
             const { data, error } = await supabase
                 .from('empresaCliente')
                 .select('fkCliente(id, nombre, tipo, correoelectronico)')
@@ -621,15 +619,13 @@ async eliminarRecordatorio(id) {
             throw error;
         }
     }
-    // Repository
     obtenerEmpleadosYTicketsPorUsuario = async (idUsuario) => {
     try {
-        // Primero obtenemos el fkEmpresa del usuario logeado
         const { data: empresaUsuario, error: errorUsuario } = await supabase
             .from('usuario')
             .select('fkempresa')
             .eq('id', idUsuario)
-            .single();  // single() para obtener un único resultado
+            .single();  
 
         if (errorUsuario) {
             throw new Error(errorUsuario.message);
@@ -637,7 +633,6 @@ async eliminarRecordatorio(id) {
 
         const fkEmpresa = empresaUsuario.fkempresa;
 
-        // Ahora consultamos los empleados que pertenecen a la misma empresa
         const { data, error } = await supabase
             .from('usuario')
             .select(`id, nombre, correoelectronico, calificacion(puntaje), ticket(id, asunto, fkestado)`)
@@ -647,7 +642,6 @@ async eliminarRecordatorio(id) {
             throw new Error(error.message);
         }
 
-        // Procesamos los datos para calcular promedio de calificaciones y total de tickets
         const empleados = data.reduce((acc, empleado) => {
             const totalTickets = empleado.ticket.length;
             const calificaciones = empleado.calificacion.map(c => c.puntaje);
@@ -669,7 +663,7 @@ async eliminarRecordatorio(id) {
         throw error;
     }
 }
-crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad, fkempleado) => {
+crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => {
     try {
         const { data, error } = await supabase
             .from('ticket')
@@ -691,6 +685,16 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad, fke
 
         const ticketId = data.id;
 
+        const { data: empleados, error: empleadosError } = await supabase
+            .from('usuario')  
+            .select('id') 
+            .eq('fkrol', 2); 
+
+        if (empleadosError) throw new Error(empleadosError.message);
+
+        // Selecciona un empleado aleatorio
+        const randomEmpleado = empleados[Math.floor(Math.random() * empleados.length)];
+
         const { data: mensajeData, error: mensajeError } = await supabase
             .from('mensaje')
             .insert([
@@ -699,7 +703,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad, fke
                     fkCliente: idCliente,
                     contenido: mensaje,
                     fechacreacion: new Date().toISOString(),
-                    fkEmpleado: null   // Null porque es el cliente quien crea el ticket
+                    fkEmpleado: randomEmpleado.id  // Usa el id del empleado aleatorio
                 }
             ])
             .select();
@@ -713,13 +717,13 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad, fke
     }
 }
 
+
 responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
     try {
         if (!idTicket) {
             throw new Error("idTicket es requerido");
         }
 
-        // Primero, verificamos si el ticket existe
         const { data: ticketData, error: ticketError } = await supabase
             .from('ticket')
             .select('*')
@@ -728,7 +732,6 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
 
         if (ticketError) throw new Error(`Ticket no encontrado: ${ticketError.message}`);
 
-        // Luego, insertamos el nuevo mensaje
         const { data, error } = await supabase
             .from('mensaje')
             .insert([
@@ -743,8 +746,7 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
             .select();
         if (error) throw new Error(`Error al insertar mensaje: ${error.message}`);
 
-        // Actualizamos el estado del ticket
-        const nuevoEstado = esEmpleado ? 1 : 3; // 1: abierto (esperando respuesta del cliente), 3: esperando respuesta del empleado
+        const nuevoEstado = esEmpleado ? 1 : 3; 
         const { error: updateError } = await supabase
             .from('ticket')
             .update({ fkestado: nuevoEstado })

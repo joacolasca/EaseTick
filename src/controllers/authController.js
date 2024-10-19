@@ -2,30 +2,24 @@ const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository'); 
 
 const login = async (req, res) => {
-    const { correoelectronico, password } = req.body; // Cambia 'username' por 'correoelectronico'
+    const { correoelectronico, password } = req.body; 
 
     try {
-        console.log(correoelectronico);
-        console.log(password);
-        // Buscar el usuario por correoelectronico en la tabla `usuario`
         const usuario = await usuarioRepository.findUsuarioByCorreoElectronico(correoelectronico);
 
-        // Validar si el usuario existe y la contraseña es correcta
-        if (!usuario || usuario.contrasena !== password) { // Cambia 'usuario.password' a 'usuario.contrasena'
+        if (!usuario || usuario.contrasena !== password) { 
             return res.status(401).json({ message: 'Usuario o contraseña incorrectos' });
         }
 
-        // Crear el token JWT
         const token = jwt.sign(
             { id: usuario.id, correoelectronico: usuario.correoelectronico, fkempresa: usuario.fkempresa }, 
             process.env.JWT_SECRET, 
             { expiresIn: '1h' }
         );
 
-        // Retornar el token junto con el fkrol
         return res.json({ 
             token,
-            fkrol: usuario.fkrol // Retornamos también el fkrol
+            fkrol: usuario.fkrol
         });
     } catch (error) {
         console.error('Error al iniciar sesión:', error);

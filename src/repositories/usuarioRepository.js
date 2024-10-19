@@ -4,8 +4,8 @@ const findUsuarioByCorreoElectronico = async (correoelectronico) => {
     const { data, error } = await supabase
         .from('usuario')
         .select('*')
-        .eq('correoelectronico', correoelectronico) // Cambia 'username' por 'correoelectronico'
-        .single(); // Devuelve solo un usuario
+        .eq('correoelectronico', correoelectronico) 
+        .single(); 
     if (error) {
         console.error('Error obteniendo usuario:', error);
         throw error;
