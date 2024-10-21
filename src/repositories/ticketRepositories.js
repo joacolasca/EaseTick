@@ -635,7 +635,13 @@ async eliminarRecordatorio(id) {
 
         const { data, error } = await supabase
             .from('usuario')
-            .select(`id, nombre, correoelectronico, calificacion(puntaje), ticket(id, asunto, fkestado)`)
+            .select(`
+                id, 
+                nombre, 
+                correoelectronico, 
+                calificacion(puntaje), 
+                ticket!ticket_fkusuario_fkey(id, asunto, fkestado)
+            `)
             .eq('fkempresa', fkEmpresa);
 
         if (error) {
@@ -850,9 +856,8 @@ async obtenerTicket(id) {
             .from('ticket')
             .select(`
                 *,
-                prioridad:prioridad(nombre),
-                tipo:tipoticket(nombre),
-                estado:estado(nombre)
+                prioridad:prioridad(id, nombre),
+                tipo:tipoticket(id, nombre)
             `)
             .eq('id', id)
             .single();
@@ -865,6 +870,10 @@ async obtenerTicket(id) {
             console.log(`Repositorio: Ticket con ID ${id} no encontrado`);
             throw new Error("Ticket no encontrado");
         }
+
+        // Asegurarse de que prioridad y tipo tengan un valor por defecto si son null
+        data.prioridad = data.prioridad || { id: null, nombre: 'No especificada' };
+        data.tipo = data.tipo || { id: null, nombre: 'No especificado' };
 
         console.log(`Repositorio: Ticket con ID ${id} obtenido correctamente`);
         return data;
@@ -879,5 +888,11 @@ async obtenerTicket(id) {
 
 
 module.exports = TicketRepository;
+
+
+
+
+
+
 
 

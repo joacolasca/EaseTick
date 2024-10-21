@@ -10,14 +10,12 @@ const svc = new TicketService();
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
     try {
-        const tickets = await svc.obtenerTicketsDeEmpleado(id);
-        return res.status(200).json({ success: true, message: tickets });
+        const ticket = await svc.obtenerTicket(id);
+        return res.status(200).json(ticket);
     } catch (e) {
-        return res.status(500).send({ error: `Hubo un error al obtener los datos del dashboard: ${e.message}` });
+        return res.status(500).json({ error: `Error al obtener el ticket: ${e.message}` });
     }
 });
-
-
 router.get("/:id/mensajes", async (req, res) => {
     const { id } = req.params;
     try {
@@ -27,7 +25,6 @@ router.get("/:id/mensajes", async (req, res) => {
         return res.status(500).json({ error: `Error al obtener mensajes del ticket: ${e.message}` });
     }
 });
-
 router.post("/:id/mensaje", async (req, res) => {
     const { id } = req.params;
     const { idUsuario, contenido, esEmpleado } = req.body;
@@ -38,7 +35,6 @@ router.post("/:id/mensaje", async (req, res) => {
         return res.status(500).json({ error: `Error al enviar mensaje: ${e.message}` });
     }
 });
-
 router.post("/:id/cerrar", async (req, res) => {
     const { id } = req.params;
     try {
