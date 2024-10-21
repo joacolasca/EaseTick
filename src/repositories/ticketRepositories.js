@@ -777,9 +777,107 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
         throw error;
     }
 }
+
+async obtenerMensajesDeTicket(idTicket) {
+    try {
+        const { data, error } = await supabase
+            .from('mensaje')
+            .select('*, fkCliente(nombre), fkEmpleado(nombre)')
+            .eq('fkticket', idTicket)
+            .order('fechacreacion', { ascending: true });
+
+        if (error) throw new Error(error.message);
+        return data;
+    } catch (error) {
+        console.error(`Error al obtener mensajes del ticket: ${error.message}`);
+        throw error;
+    }
+}
+
+async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado) {
+    try {
+        const { data, error } = await supabase
+            .from('mensaje')
+            .insert([
+                {
+                    fkticket: idTicket,
+                    fkCliente: esEmpleado ? null : idUsuario,
+                    fkEmpleado: esEmpleado ? idUsuario : null,
+                    contenido: contenido,
+                    fechacreacion: new Date().toISOString()
+                }
+            ])
+            .select();
+
+        if (error) throw new Error(error.message);
+
+        // Actualizar el estado del ticket
+        const nuevoEstado = esEmpleado ? 1 : 3; // 1: Abierto, 3: Esperando respuesta de empleado
+        const { error: updateError } = await supabase
+            .from('ticket')
+            .update({ fkestado: nuevoEstado })
+            .eq('id', idTicket);
+
+        if (updateError) throw new Error(updateError.message);
+
+        return data[0];
+    } catch (error) {
+        console.error(`Error al enviar mensaje: ${error.message}`);
+        throw error;
+    }
+}
+
+async cerrarTicket(idTicket) {
+    try {
+        const { data, error } = await supabase
+            .from('ticket')
+            .update({ fkestado: 2 }) // 2: Cerrado
+            .eq('id', idTicket)
+            .select();
+
+        if (error) throw new Error(error.message);
+        return data[0];
+    } catch (error) {
+        console.error(`Error al cerrar ticket: ${error.message}`);
+        throw error;
+    }
+}
+
+async obtenerTicket(id) {
+    console.log(`Repositorio: Obteniendo ticket con ID ${id}`);
+    try {
+        const { data, error } = await supabase
+            .from('ticket')
+            .select(`
+                *,
+                prioridad:prioridad(nombre),
+                tipo:tipoticket(nombre),
+                estado:estado(nombre)
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            console.error(`Repositorio: Error de Supabase al obtener ticket ${id}:`, error);
+            throw new Error(error.message);
+        }
+        if (!data) {
+            console.log(`Repositorio: Ticket con ID ${id} no encontrado`);
+            throw new Error("Ticket no encontrado");
+        }
+
+        console.log(`Repositorio: Ticket con ID ${id} obtenido correctamente`);
+        return data;
+    } catch (error) {
+        console.error(`Repositorio: Error al obtener ticket ${id}:`, error);
+        throw error;
+    }
+}
 }
 
 
 
 
 module.exports = TicketRepository;
+
+

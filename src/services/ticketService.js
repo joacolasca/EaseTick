@@ -202,6 +202,41 @@ class TicketService {
             throw new Error(`Error al obtener mensajes del ticket: ${error.message}`);
         }
     }
+
+    async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.enviarMensaje(idTicket, idUsuario, contenido, esEmpleado);
+        } catch (error) {
+            throw new Error(`Error al enviar mensaje: ${error.message}`);
+        }
+    }
+
+    async cerrarTicket(idTicket) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.cerrarTicket(idTicket);
+        } catch (error) {
+            throw new Error(`Error al cerrar ticket: ${error.message}`);
+        }
+    }
+
+    async obtenerTicket(id) {
+        console.log(`Servicio: Obteniendo ticket con ID ${id}`);
+        try {
+            const repo = new TicketRepository();
+            const ticket = await repo.obtenerTicket(id);
+            if (!ticket) {
+                console.log(`Servicio: Ticket con ID ${id} no encontrado`);
+                throw new Error("Ticket no encontrado");
+            }
+            console.log(`Servicio: Ticket con ID ${id} obtenido correctamente`);
+            return ticket;
+        } catch (error) {
+            console.error(`Servicio: Error al obtener ticket ${id}:`, error);
+            throw error;
+        }
+    }
 }
 
 module.exports = TicketService;
