@@ -850,7 +850,6 @@ async cerrarTicket(idTicket) {
 }
 
 async obtenerTicket(id) {
-    console.log(`Repositorio: Obteniendo ticket con ID ${id}`);
     try {
         const { data, error } = await supabase
             .from('ticket')
@@ -867,7 +866,6 @@ async obtenerTicket(id) {
             throw new Error(error.message);
         }
         if (!data) {
-            console.log(`Repositorio: Ticket con ID ${id} no encontrado`);
             throw new Error("Ticket no encontrado");
         }
 
@@ -875,7 +873,6 @@ async obtenerTicket(id) {
         data.prioridad = data.prioridad || { id: null, nombre: 'No especificada' };
         data.tipo = data.tipo || { id: null, nombre: 'No especificado' };
 
-        console.log(`Repositorio: Ticket con ID ${id} obtenido correctamente`);
         return data;
     } catch (error) {
         console.error(`Repositorio: Error al obtener ticket ${id}:`, error);

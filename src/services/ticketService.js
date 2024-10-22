@@ -222,15 +222,12 @@ class TicketService {
     }
 
     async obtenerTicket(id) {
-        console.log(`Servicio: Obteniendo ticket con ID ${id}`);
         try {
             const repo = new TicketRepository();
             const ticket = await repo.obtenerTicket(id);
             if (!ticket) {
-                console.log(`Servicio: Ticket con ID ${id} no encontrado`);
                 throw new Error("Ticket no encontrado");
             }
-            console.log(`Servicio: Ticket con ID ${id} obtenido correctamente`);
             return ticket;
         } catch (error) {
             console.error(`Servicio: Error al obtener ticket ${id}:`, error);
