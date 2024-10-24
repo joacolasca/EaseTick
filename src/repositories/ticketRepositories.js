@@ -671,6 +671,37 @@ async eliminarRecordatorio(id) {
 }
 crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => {
     try {
+        // Obtener todos los empleados
+        const { data: empleados, error: empleadosError } = await supabase
+            .from('usuario')
+            .select('id')
+            .eq('fkrol', 2); // Rol de empleado
+
+        if (empleadosError) throw new Error(empleadosError.message);
+
+        // Inicializar el conteo de tickets por empleado
+        const ticketCounts = {};
+
+        // Contar los tickets por empleado
+        for (const empleado of empleados) {
+            const { data: tickets, error: ticketsError } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkusuario', empleado.id)
+                .eq('fkestado', 1); // Solo tickets abiertos
+
+            if (ticketsError) throw new Error(ticketsError.message);
+
+            ticketCounts[empleado.id] = tickets.length;
+        }
+
+        // Encontrar el empleado con menos tickets
+        const empleadoConMenosTickets = empleados.reduce((minEmpleado, empleado) => {
+            const ticketCount = ticketCounts[empleado.id] || 0;
+            return ticketCount < minEmpleado.count ? { id: empleado.id, count: ticketCount } : minEmpleado;
+        }, { id: null, count: Infinity });
+
+        // Insertar el ticket con el empleado seleccionado
         const { data, error } = await supabase
             .from('ticket')
             .insert([
@@ -679,9 +710,9 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
                     fktipo: tipo,
                     fkestado: 1,
                     fkprioridad: prioridad,
-                    fkusuario: idCliente,
+                    fkusuario: empleadoConMenosTickets.id, // Asignar empleado con menos tickets
                     fkempresa: idEmpresa,
-                    fkcliente: idCliente, // Insertar fkcliente
+                    fkcliente: idCliente,
                     fechacreacion: new Date().toISOString()
                 }
             ])
@@ -690,27 +721,16 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
 
         if (error) throw new Error(error.message);
 
-        const ticketId = data.id;
-
-        const { data: empleados, error: empleadosError } = await supabase
-            .from('usuario')  
-            .select('id') 
-            .eq('fkrol', 2); 
-
-        if (empleadosError) throw new Error(empleadosError.message);
-
-        // Selecciona un empleado aleatorio
-        const randomEmpleado = empleados[Math.floor(Math.random() * empleados.length)];
-
+        // Insertar el mensaje inicial
         const { data: mensajeData, error: mensajeError } = await supabase
             .from('mensaje')
             .insert([
                 {
-                    fkticket: ticketId,
+                    fkticket: data.id,
                     fkCliente: idCliente,
                     contenido: mensaje,
                     fechacreacion: new Date().toISOString(),
-                    fkEmpleado: randomEmpleado.id  // Usa el id del empleado aleatorio
+                    fkEmpleado: empleadoConMenosTickets.id
                 }
             ])
             .select();
@@ -909,6 +929,10 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
+
+
+
+
 
 
 
