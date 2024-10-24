@@ -249,4 +249,14 @@ router.post("/responder", async (req, res) => {
     }
 });
 
+router.get("/informacionCompleta/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketInfo = await svc.obtenerInformacionCompletaDeTicket(id);
+        return res.status(200).json({ success: true, message: ticketInfo });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener la información completa del ticket: ${e.message}` });
+    }
+});
+
 module.exports = router;

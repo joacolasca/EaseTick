@@ -879,12 +879,36 @@ async obtenerTicket(id) {
         throw error;
     }
 }
+async obtenerInformacionCompletaDeTicket(id) {
+    try {
+        const { data, error } = await supabase
+            .from('ticket')
+            .select(`
+                *,
+                prioridad:prioridad(id, nombre),
+                tipo:tipoticket(id, nombre),
+                mensajes:mensaje(*, fkCliente(nombre), fkEmpleado(nombre))
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error(`Error al obtener información completa del ticket: ${error.message}`);
+        throw error;
+    }
+}
 }
 
 
 
 
 module.exports = TicketRepository;
+
 
 
 
