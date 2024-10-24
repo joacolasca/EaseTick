@@ -681,6 +681,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
                     fkprioridad: prioridad,
                     fkusuario: idCliente,
                     fkempresa: idEmpresa,
+                    fkcliente: idCliente, // Insertar fkcliente
                     fechacreacion: new Date().toISOString()
                 }
             ])
@@ -908,6 +909,7 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
+
 
 
 
