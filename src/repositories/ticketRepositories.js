@@ -149,6 +149,7 @@ class TicketRepository {
             const { data, error } = await supabase
                 .from('ticket')
                 .select(`
+                    id,
                     asunto,
                     fechacreacion,
                     empresa:fkempresa(nombre),
