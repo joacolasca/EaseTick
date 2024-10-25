@@ -259,4 +259,17 @@ router.get("/informacionCompleta/:id", async (req, res) => {
     }
 });
 
+router.get("/cliente/:id", async (req, res) => {
+    const { id } = req.params;
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "ID de cliente inválido" });
+    }
+    try {
+        const tickets = await svc.obtenerTicketsDeCliente(parseInt(id, 10));
+        return res.status(200).json({ success: true, message: tickets });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener los tickets del cliente: ${e.message}` });
+    }
+});
+
 module.exports = router;

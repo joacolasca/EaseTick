@@ -244,6 +244,16 @@ class TicketService {
             throw new Error(`Error al obtener información completa del ticket: ${error.message}`);
         }
     }
+
+    obtenerTicketsDeCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const tickets = await repo.obtenerTicketsDeCliente(id);
+            return tickets;
+        } catch (error) {
+            throw new Error(`Error al obtener tickets del cliente: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;
