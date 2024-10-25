@@ -859,7 +859,7 @@ async cerrarTicket(idTicket) {
     try {
         const { data, error } = await supabase
             .from('ticket')
-            .update({ fkestado: 2 }) // 2: Cerrado
+            .update({ fkestado: 2, fechafinalizado: new Date().toISOString() })
             .eq('id', idTicket)
             .select();
 
@@ -930,6 +930,8 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
+
+
 
 
 

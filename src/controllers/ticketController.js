@@ -39,7 +39,7 @@ router.post("/:id/cerrar", async (req, res) => {
     const { id } = req.params;
     try {
         const ticket = await svc.cerrarTicket(id);
-        return res.status(200).json({ ticket });
+        return res.status(200).json({ success: true, message: 'Ticket cerrado exitosamente', ticket });
     } catch (e) {
         return res.status(500).json({ error: `Error al cerrar ticket: ${e.message}` });
     }
