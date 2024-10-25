@@ -947,12 +947,39 @@ async obtenerInformacionCompletaDeTicket(id) {
             throw error;
         }
     }
+    obtenerEquipoCliente = async (idCliente) => {
+        try {
+            // Primero, obtenemos la empresa del cliente
+            const { data: cliente, error: clienteError } = await supabase
+                .from('usuario')
+                .select('fkempresa')
+                .eq('id', idCliente)
+                .single();
+
+            if (clienteError) throw new Error(clienteError.message);
+
+            // Luego, obtenemos todos los usuarios de esa empresa
+            const { data: equipo, error: equipoError } = await supabase
+                .from('usuario')
+                .select('nombre, correoelectronico')
+                .eq('fkempresa', cliente.fkempresa);
+
+            if (equipoError) throw new Error(equipoError.message);
+
+            return equipo;
+        } catch (error) {
+            console.error(`Error en obtenerEquipoCliente: ${error.message}`);
+            throw error;
+        }
+    }
 }
 
 
 
 
 module.exports = TicketRepository;
+
+
 
 
 

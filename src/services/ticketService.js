@@ -254,6 +254,16 @@ class TicketService {
             throw new Error(`Error al obtener tickets del cliente: ${error.message}`);
         }
     }
+
+    obtenerEquipoCliente = async (idCliente) => {
+        try {
+            const repo = new TicketRepository();
+            const equipo = await repo.obtenerEquipoCliente(idCliente);
+            return equipo;
+        } catch (error) {
+            throw new Error(`Error al obtener equipo del cliente: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

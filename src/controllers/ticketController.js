@@ -272,4 +272,17 @@ router.get("/cliente/:id", async (req, res) => {
     }
 });
 
+router.get("/equipo/:id", async (req, res) => {
+    const { id } = req.params;
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "ID de cliente inválido" });
+    }
+    try {
+        const equipo = await svc.obtenerEquipoCliente(parseInt(id, 10));
+        return res.status(200).json({ success: true, message: equipo });
+    } catch (e) {
+        return res.status(500).send({ error: `Hubo un error al obtener el equipo del cliente: ${e.message}` });
+    }
+});
+
 module.exports = router;
