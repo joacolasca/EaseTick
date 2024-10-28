@@ -215,9 +215,16 @@ class TicketService {
     async cerrarTicket(idTicket) {
         try {
             const repo = new TicketRepository();
-            return await repo.cerrarTicket(idTicket);
+            const resultado = await repo.cerrarTicket(idTicket);
+            
+            if (!resultado.success) {
+                throw new Error('No se pudo cerrar el ticket');
+            }
+            
+            return resultado;
         } catch (error) {
-            throw new Error(`Error al cerrar ticket: ${error.message}`);
+            console.error('Error en servicio cerrarTicket:', error);
+            throw error;
         }
     }
 

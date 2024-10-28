@@ -20,17 +20,17 @@ router.get("/:id/mensajes", async (req, res) => {
     const { id } = req.params;
     try {
         const mensajes = await svc.obtenerMensajesDeTicket(id);
-        return res.status(200).json({ mensajes });
+        return res.status(200).json({ success: true, mensajes });
     } catch (e) {
-        return res.status(500).json({ error: `Error al obtener mensajes del ticket: ${e.message}` });
+        return res.status(500).json({ error: `Error al obtener mensajes: ${e.message}` });
     }
 });
 router.post("/:id/mensaje", async (req, res) => {
     const { id } = req.params;
-    const { idUsuario, contenido, esEmpleado } = req.body;
+    const { contenido, userId, isEmployee } = req.body;
     try {
-        const mensaje = await svc.enviarMensaje(id, idUsuario, contenido, esEmpleado);
-        return res.status(200).json({ mensaje });
+        const mensaje = await svc.enviarMensaje(id, userId, contenido, isEmployee);
+        return res.status(200).json({ success: true, mensaje });
     } catch (e) {
         return res.status(500).json({ error: `Error al enviar mensaje: ${e.message}` });
     }
@@ -38,10 +38,21 @@ router.post("/:id/mensaje", async (req, res) => {
 router.post("/:id/cerrar", async (req, res) => {
     const { id } = req.params;
     try {
-        const ticket = await svc.cerrarTicket(id);
-        return res.status(200).json({ success: true, message: 'Ticket cerrado exitosamente', ticket });
-    } catch (e) {
-        return res.status(500).json({ error: `Error al cerrar ticket: ${e.message}` });
+        const resultado = await svc.cerrarTicket(id);
+        if (resultado.success) {
+            return res.status(200).json({
+                success: true,
+                message: 'Ticket cerrado exitosamente'
+            });
+        } else {
+            throw new Error('No se pudo cerrar el ticket');
+        }
+    } catch (error) {
+        console.error('Error en controlador cerrarTicket:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 
@@ -282,6 +293,21 @@ router.get("/equipo/:id", async (req, res) => {
         return res.status(200).json({ success: true, message: equipo });
     } catch (e) {
         return res.status(500).send({ error: `Hubo un error al obtener el equipo del cliente: ${e.message}` });
+    }
+});
+
+router.get("/estado/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticket = await svc.obtenerTicket(id);
+        return res.status(200).json({ 
+            success: true, 
+            estado: ticket.fkestado 
+        });
+    } catch (e) {
+        return res.status(500).json({ 
+            error: `Error al obtener estado del ticket: ${e.message}` 
+        });
     }
 });
 

@@ -837,18 +837,9 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado) {
                     fechacreacion: new Date().toISOString()
                 }
             ])
-            .select();
+            .select('*, fkCliente(nombre), fkEmpleado(nombre)');
 
         if (error) throw new Error(error.message);
-
-        // Actualizar el estado del ticket
-        const nuevoEstado = esEmpleado ? 1 : 3; // 1: Abierto, 3: Esperando respuesta de empleado
-        const { error: updateError } = await supabase
-            .from('ticket')
-            .update({ fkestado: nuevoEstado })
-            .eq('id', idTicket);
-
-        if (updateError) throw new Error(updateError.message);
 
         return data[0];
     } catch (error) {
@@ -861,14 +852,20 @@ async cerrarTicket(idTicket) {
     try {
         const { data, error } = await supabase
             .from('ticket')
-            .update({ fkestado: 2, fechafinalizado: new Date().toISOString() })
-            .eq('id', idTicket)
-            .select();
+            .update({
+                fkestado: 2,
+                fechafinalizado: new Date().toISOString()
+            })
+            .match({ id: idTicket });
 
-        if (error) throw new Error(error.message);
-        return data[0];
+        if (error) {
+            console.error('Error en Supabase:', error);
+            throw new Error('Error al cerrar el ticket en la base de datos');
+        }
+
+        return { success: true };
     } catch (error) {
-        console.error(`Error al cerrar ticket: ${error.message}`);
+        console.error('Error en cerrarTicket:', error);
         throw error;
     }
 }
@@ -980,6 +977,12 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
+
+
+
+
+
+
 
 
 
