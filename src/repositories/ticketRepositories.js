@@ -543,7 +543,9 @@ async agregarRecordatorio(texto, idUsuario) {
 
         const { data, error } = await supabase
             .from('recordatorio')
-            .insert([{ texto: texto, fkusuario: idUsuario }]);
+            .insert([{ texto: texto, fkusuario: idUsuario }])
+            .select() // Agregamos .select() para obtener el registro insertado
+            .single(); // Obtenemos solo el primer registro
 
         if (error) {
             throw new Error(error.message);
@@ -978,6 +980,7 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
+
 
 
 
