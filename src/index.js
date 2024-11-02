@@ -7,8 +7,11 @@ const TicketRouter = require('./controllers/ticketController')
 const TicketService = require('./services/ticketService');
 const dotenv = require('dotenv').config();
 
+
 const authController = require('./controllers/authController');
 const authMiddleware = require('./middleware/authMiddleware'); // Para proteger rutas en el futuro
+
+const userController = require('./controllers/userController');
 
 const app = express();
 const httpServer = createServer(app);
@@ -27,6 +30,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/front", express.static("public"));
 app.use('/tickets', TicketRouter);
+app.use('/users', userController);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
