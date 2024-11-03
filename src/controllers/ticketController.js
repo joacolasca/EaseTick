@@ -377,4 +377,25 @@ router.get("/tendenciaSemanalCliente/:id", async (req, res) => {
     }
 });
 
+router.get("/ticketsPorMesCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketsPorMes = await svc.obtenerTicketsPorMesCliente(id);
+        return res.status(200).json({ success: true, message: ticketsPorMes });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener tickets por mes: ${e.message}` });
+    }
+});
+
+router.get("/distribucionPorDiaCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const distribucion = await svc.obtenerDistribucionPorDiaCliente(id);
+        res.status(200).json({ success: true, message: distribucion });
+    } catch (e) {
+        console.error('Error en distribucionPorDiaCliente:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 module.exports = router;

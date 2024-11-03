@@ -1100,6 +1100,92 @@ async obtenerInformacionCompletaDeTicket(id) {
             throw new Error(`Error en obtenerTendenciaSemanalCliente: ${error.message}`);
         }
     }
+
+    async obtenerTicketsPorMesCliente(id) {
+        try {
+            const fechaActual = new Date();
+            const seisMesesAtras = new Date(fechaActual);
+            seisMesesAtras.setMonth(seisMesesAtras.getMonth() - 6);
+
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion')
+                .eq('fkcliente', id)
+                .gte('fechacreacion', seisMesesAtras.toISOString())
+                .lte('fechacreacion', fechaActual.toISOString());
+
+            if (error) throw new Error(error.message);
+
+            const meses = {};
+            const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+            // Inicializar últimos 6 meses en 0
+            for (let i = 5; i >= 0; i--) {
+                const fecha = new Date();
+                fecha.setMonth(fecha.getMonth() - i);
+                const nombreMes = nombresMeses[fecha.getMonth()];
+                meses[nombreMes] = 0;
+            }
+
+            // Contar tickets por mes
+            data.forEach(ticket => {
+                const fecha = new Date(ticket.fechacreacion);
+                const nombreMes = nombresMeses[fecha.getMonth()];
+                if (meses[nombreMes] !== undefined) {
+                    meses[nombreMes]++;
+                }
+            });
+
+            return meses;
+        } catch (error) {
+            throw new Error(`Error en obtenerTicketsPorMesCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerDistribucionPorDiaCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion')
+                .eq('fkcliente', id);
+
+            if (error) throw new Error(error.message);
+
+            // Inicializar el objeto para contar tickets por día
+            const ticketsPorDia = {
+                'Lunes': 0,
+                'Martes': 0,
+                'Miércoles': 0,
+                'Jueves': 0,
+                'Viernes': 0,
+                'Sábado': 0,
+                'Domingo': 0
+            };
+
+            // Contar tickets por día
+            data.forEach(ticket => {
+                const fecha = new Date(ticket.fechacreacion);
+                const dia = fecha.getDay();
+                const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                ticketsPorDia[diasSemana[dia]]++;
+            });
+
+            // Formatear datos para el gráfico
+            return {
+                labels: Object.keys(ticketsPorDia),
+                datasets: [{
+                    label: 'Cantidad de Tickets',
+                    data: Object.values(ticketsPorDia),
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            };
+        } catch (error) {
+            throw new Error(`Error en obtenerDistribucionPorDiaCliente: ${error.message}`);
+        }
+    }
 }
 
 
