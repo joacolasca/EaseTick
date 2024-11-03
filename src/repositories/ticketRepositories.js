@@ -971,6 +971,135 @@ async obtenerInformacionCompletaDeTicket(id) {
             throw error;
         }
     }
+
+    async obtenerTotalTicketsCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('id')
+                .eq('fkcliente', id);
+
+            if (error) throw new Error(error.message);
+            return data.length;
+        } catch (error) {
+            throw new Error(`Error en obtenerTotalTicketsCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTicketsPorEstadoCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('estado:fkestado(nombre)')
+                .eq('fkcliente', id);
+
+            if (error) throw new Error(error.message);
+
+            const distribucion = data.reduce((acc, ticket) => {
+                const estado = ticket.estado.nombre;
+                acc[estado] = (acc[estado] || 0) + 1;
+                return acc;
+            }, {});
+
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error en obtenerTicketsPorEstadoCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTicketsPorPrioridadCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('prioridad:fkprioridad(nombre)')
+                .eq('fkcliente', id);
+
+            if (error) throw new Error(error.message);
+
+            const distribucion = data.reduce((acc, ticket) => {
+                const prioridad = ticket.prioridad.nombre;
+                acc[prioridad] = (acc[prioridad] || 0) + 1;
+                return acc;
+            }, {});
+
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error en obtenerTicketsPorPrioridadCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTiempoPromedioResolucionCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion, fechafinalizado')
+                .eq('fkcliente', id)
+                .not('fechafinalizado', 'is', null);
+
+            if (error) throw new Error(error.message);
+
+            if (data.length === 0) return 0;
+
+            const tiempoTotal = data.reduce((acc, ticket) => {
+                const inicio = new Date(ticket.fechacreacion);
+                const fin = new Date(ticket.fechafinalizado);
+                return acc + (fin - inicio);
+            }, 0);
+
+            return Math.round(tiempoTotal / (data.length * 3600000)); // Convertir a horas
+        } catch (error) {
+            throw new Error(`Error en obtenerTiempoPromedioResolucionCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTicketsPorTipoCliente(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('tipo:tipoticket(nombre)')
+                .eq('fkcliente', id);
+
+            if (error) throw new Error(error.message);
+
+            const distribucion = data.reduce((acc, ticket) => {
+                const tipo = ticket.tipo.nombre;
+                acc[tipo] = (acc[tipo] || 0) + 1;
+                return acc;
+            }, {});
+
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error en obtenerTicketsPorTipoCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTendenciaSemanalCliente(id) {
+        try {
+            const fechaActual = new Date();
+            const fechaInicio = new Date(fechaActual);
+            fechaInicio.setDate(fechaInicio.getDate() - 7);
+
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion')
+                .eq('fkcliente', id)
+                .gte('fechacreacion', fechaInicio.toISOString())
+                .lte('fechacreacion', fechaActual.toISOString());
+
+            if (error) throw new Error(error.message);
+
+            const tendencia = Array(7).fill(0);
+            data.forEach(ticket => {
+                const fecha = new Date(ticket.fechacreacion);
+                const dia = fecha.getDay();
+                tendencia[dia]++;
+            });
+
+            return tendencia;
+        } catch (error) {
+            throw new Error(`Error en obtenerTendenciaSemanalCliente: ${error.message}`);
+        }
+    }
 }
 
 

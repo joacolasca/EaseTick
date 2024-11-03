@@ -271,6 +271,66 @@ class TicketService {
             throw new Error(`Error al obtener equipo del cliente: ${error.message}`);
         }
     }
+
+    obtenerTotalTicketsCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const total = await repo.obtenerTotalTicketsCliente(id);
+            return total;
+        } catch (error) {
+            throw new Error(`Error al obtener total de tickets: ${error.message}`);
+        }
+    }
+
+    obtenerTicketsPorEstadoCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const distribucion = await repo.obtenerTicketsPorEstadoCliente(id);
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error al obtener distribución por estado: ${error.message}`);
+        }
+    }
+
+    obtenerTicketsPorPrioridadCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const distribucion = await repo.obtenerTicketsPorPrioridadCliente(id);
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error al obtener distribución por prioridad: ${error.message}`);
+        }
+    }
+
+    obtenerTiempoPromedioResolucionCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const promedio = await repo.obtenerTiempoPromedioResolucionCliente(id);
+            return promedio;
+        } catch (error) {
+            throw new Error(`Error al obtener tiempo promedio: ${error.message}`);
+        }
+    }
+
+    obtenerTicketsPorTipoCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const distribucion = await repo.obtenerTicketsPorTipoCliente(id);
+            return distribucion;
+        } catch (error) {
+            throw new Error(`Error al obtener distribución por tipo: ${error.message}`);
+        }
+    }
+
+    obtenerTendenciaSemanalCliente = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const tendencia = await repo.obtenerTendenciaSemanalCliente(id);
+            return tendencia;
+        } catch (error) {
+            throw new Error(`Error al obtener tendencia semanal: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

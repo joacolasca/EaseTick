@@ -311,4 +311,70 @@ router.get("/estado/:id", async (req, res) => {
     }
 });
 
+// Total tickets por cliente
+router.get("/totalTicketsCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const total = await svc.obtenerTotalTicketsCliente(id);
+        return res.status(200).json({ success: true, message: total });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener total de tickets: ${e.message}` });
+    }
+});
+
+// Tickets por estado del cliente
+router.get("/ticketsPorEstadoCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const distribucion = await svc.obtenerTicketsPorEstadoCliente(id);
+        return res.status(200).json({ success: true, message: distribucion });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener distribución de estados: ${e.message}` });
+    }
+});
+
+// Tickets por prioridad del cliente
+router.get("/ticketsPorPrioridadCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const distribucion = await svc.obtenerTicketsPorPrioridadCliente(id);
+        return res.status(200).json({ success: true, message: distribucion });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener distribución de prioridades: ${e.message}` });
+    }
+});
+
+// Tiempo promedio de resolución
+router.get("/tiempoPromedioResolucionCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const promedio = await svc.obtenerTiempoPromedioResolucionCliente(id);
+        return res.status(200).json({ success: true, message: promedio });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener tiempo promedio: ${e.message}` });
+    }
+});
+
+// Tickets por tipo del cliente
+router.get("/ticketsPorTipoCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const distribucion = await svc.obtenerTicketsPorTipoCliente(id);
+        return res.status(200).json({ success: true, message: distribucion });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener distribución por tipo: ${e.message}` });
+    }
+});
+
+// Tendencia semanal de tickets
+router.get("/tendenciaSemanalCliente/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const tendencia = await svc.obtenerTendenciaSemanalCliente(id);
+        return res.status(200).json({ success: true, message: tendencia });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener tendencia semanal: ${e.message}` });
+    }
+});
+
 module.exports = router;
