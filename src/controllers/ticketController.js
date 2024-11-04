@@ -366,7 +366,7 @@ router.get("/ticketsPorTipoCliente/:id", async (req, res) => {
     }
 });
 
-// Tendencia semanal de tickets
+// Tendencia semanal de tickets del cliente
 router.get("/tendenciaSemanalCliente/:id", async (req, res) => {
     const { id } = req.params;
     try {
@@ -374,6 +374,21 @@ router.get("/tendenciaSemanalCliente/:id", async (req, res) => {
         return res.status(200).json({ success: true, message: tendencia });
     } catch (e) {
         return res.status(500).send({ error: `Error al obtener tendencia semanal: ${e.message}` });
+    }
+});
+
+// Tickets por mes del cliente
+router.get("/ticketsPorMesCliente/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const distribucion = await svc.obtenerTicketsPorMesCliente(id);
+        res.status(200).json({ success: true, message: distribucion });
+    } catch (error) {
+        console.error('Error en controlador ticketsPorMesCliente:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: `Error al obtener tickets por mes: ${error.message}` 
+        });
     }
 });
 

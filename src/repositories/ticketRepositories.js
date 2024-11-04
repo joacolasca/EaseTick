@@ -1075,29 +1075,90 @@ async obtenerInformacionCompletaDeTicket(id) {
 
     async obtenerTendenciaSemanalCliente(id) {
         try {
-            const fechaActual = new Date();
-            const fechaInicio = new Date(fechaActual);
-            fechaInicio.setDate(fechaInicio.getDate() - 7);
+            const hoy = new Date();
+            const diaSemana = hoy.getDay();
+
+            // Calcular la fecha del último domingo
+            const ultimoDomingo = new Date(hoy);
+            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+
+            // Ajustar las horas para representar correctamente el rango de fechas
+            ultimoDomingo.setHours(0, 0, 0, 0);
+            hoy.setHours(23, 59, 59, 999);
+
+            // Convertir las fechas al formato que acepta PostgreSQL
+            const fechaInicio = ultimoDomingo.toISOString();
+            const fechaFin = hoy.toISOString();
 
             const { data, error } = await supabase
                 .from('ticket')
                 .select('fechacreacion')
                 .eq('fkcliente', id)
-                .gte('fechacreacion', fechaInicio.toISOString())
-                .lte('fechacreacion', fechaActual.toISOString());
+                .gte('fechacreacion', fechaInicio)
+                .lte('fechacreacion', fechaFin)
+                .order('fechacreacion');
 
             if (error) throw new Error(error.message);
 
-            const tendencia = Array(7).fill(0);
+            // Inicializar array solo hasta el día actual
+            const tendenciaSemanal = Array(7).fill(0);
+
+            // Procesar cada ticket
             data.forEach(ticket => {
-                const fecha = new Date(ticket.fechacreacion);
-                const dia = fecha.getDay();
-                tendencia[dia]++;
+                const fechaTicket = new Date(ticket.fechacreacion);
+                const diaIndex = fechaTicket.getDay();
+                // Solo contar si el día es menor o igual al día actual
+                if (diaIndex <= diaSemana) {
+                    tendenciaSemanal[diaIndex]++;
+                }
             });
 
-            return tendencia;
+            return tendenciaSemanal;
         } catch (error) {
             throw new Error(`Error en obtenerTendenciaSemanalCliente: ${error.message}`);
+        }
+    }
+
+    async obtenerTicketsPorMesCliente(id) {
+        try {
+            // Obtener fecha actual y fecha de hace 6 meses
+            const fechaActual = new Date();
+            const fecha6MesesAtras = new Date();
+            fecha6MesesAtras.setMonth(fechaActual.getMonth() - 5); // -5 para incluir el mes actual
+            fecha6MesesAtras.setDate(1); // Primer día del mes
+
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('fechacreacion')
+                .eq('fkcliente', id)
+                .gte('fechacreacion', fecha6MesesAtras.toISOString())
+                .order('fechacreacion');
+
+            if (error) throw new Error(error.message);
+
+            // Crear array con los últimos 6 meses en orden
+            const mesesOrdenados = {};
+            for (let i = 5; i >= 0; i--) {
+                const fecha = new Date();
+                fecha.setMonth(fechaActual.getMonth() - i);
+                const nombreMes = fecha.toLocaleString('es-ES', { month: 'long' });
+                const mesCapitalizado = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+                mesesOrdenados[mesCapitalizado] = 0;
+            }
+
+            // Contar tickets por mes
+            data.forEach(ticket => {
+                const fecha = new Date(ticket.fechacreacion);
+                const nombreMes = fecha.toLocaleString('es-ES', { month: 'long' });
+                const mesCapitalizado = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+                if (mesesOrdenados.hasOwnProperty(mesCapitalizado)) {
+                    mesesOrdenados[mesCapitalizado]++;
+                }
+            });
+
+            return mesesOrdenados;
+        } catch (error) {
+            throw new Error(`Error en obtenerTicketsPorMesCliente: ${error.message}`);
         }
     }
 }

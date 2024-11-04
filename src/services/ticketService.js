@@ -331,6 +331,16 @@ class TicketService {
             throw new Error(`Error al obtener tendencia semanal: ${error.message}`);
         }
     }
+
+    async obtenerTicketsPorMesCliente(id) {
+        try {
+            const repo = new TicketRepository();
+            const ticketsPorMes = await repo.obtenerTicketsPorMesCliente(id);
+            return ticketsPorMes;
+        } catch (error) {
+            throw new Error(`Error en servicio obtenerTicketsPorMesCliente: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;
