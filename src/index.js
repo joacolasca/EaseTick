@@ -12,6 +12,7 @@ const authController = require('./controllers/authController');
 const authMiddleware = require('./middleware/authMiddleware'); // Para proteger rutas en el futuro
 
 const userController = require('./controllers/userController');
+const usuarioController = require('./controllers/usuarioController');
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,6 +32,7 @@ app.use(express.json());
 app.use("/front", express.static("public"));
 app.use('/tickets', TicketRouter);
 app.use('/users', userController);
+app.use('/usuarios', usuarioController);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
