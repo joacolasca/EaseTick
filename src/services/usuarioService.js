@@ -12,4 +12,19 @@ const findByEmail = async (email) => {
     }
 };
 
-module.exports = { findByEmail };
+const obtenerPerfilEmpleadoCompleto = async (id) => {
+    try {
+        const usuario = await usuarioRepository.obtenerPerfilEmpleadoCompleto(id);
+        if (!usuario) {
+            throw new Error('Empleado no encontrado');
+        }
+        return usuario;
+    } catch (error) {
+        throw new Error(`Error al obtener perfil completo del empleado: ${error.message}`);
+    }
+};
+
+module.exports = { 
+    findByEmail,
+    obtenerPerfilEmpleadoCompleto
+};

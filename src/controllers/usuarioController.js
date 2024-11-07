@@ -55,4 +55,20 @@ router.put('/reset-password', async (req, res) => {
     }
 });
 
+router.get('/perfil-empleado/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const perfilEmpleado = await usuarioService.obtenerPerfilEmpleadoCompleto(id);
+        return res.status(200).json({
+            success: true,
+            data: perfilEmpleado
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 

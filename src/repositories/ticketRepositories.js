@@ -657,6 +657,7 @@ async eliminarRecordatorio(id) {
             const promedioCalificacion = calificaciones.length > 0 ? calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length : 0;
 
             acc.push({
+                id: empleado.id,
                 nombre: empleado.nombre,
                 email: empleado.correoelectronico,
                 calificacion: `${Math.round(promedioCalificacion)}/5`,
