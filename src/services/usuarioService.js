@@ -24,7 +24,20 @@ const obtenerPerfilEmpleadoCompleto = async (id) => {
     }
 };
 
+const obtenerPerfilClienteCompleto = async (id) => {
+    try {
+        const usuario = await usuarioRepository.obtenerPerfilClienteCompleto(id);
+        if (!usuario) {
+            throw new Error('Cliente no encontrado');
+        }
+        return usuario;
+    } catch (error) {
+        throw new Error(`Error al obtener perfil completo del cliente: ${error.message}`);
+    }
+};
+
 module.exports = { 
     findByEmail,
-    obtenerPerfilEmpleadoCompleto
+    obtenerPerfilEmpleadoCompleto,
+    obtenerPerfilClienteCompleto
 };

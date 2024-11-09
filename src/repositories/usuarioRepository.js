@@ -78,8 +78,43 @@ const obtenerPerfilEmpleadoCompleto = async (id) => {
     }
 };
 
+const obtenerPerfilClienteCompleto = async (id) => {
+    try {
+        const { data, error } = await supabase
+            .from('empresa')
+            .select(`
+                id,
+                nombre,
+                correoelectronico,
+                telefono,
+                tipo
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('No se encontraron datos del cliente');
+
+        return {
+            nombre: data.nombre,
+            correoelectronico: data.correoelectronico,
+            telefono: data.telefono,
+            empresa: {
+                nombre: data.nombre,
+                correoelectronico: data.correoelectronico,
+                telefono: data.telefono,
+                tipo: data.tipo
+            }
+        };
+    } catch (error) {
+        console.error('Error obteniendo perfil del cliente:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     findUsuarioByCorreoElectronico,
-    obtenerPerfilEmpleadoCompleto
+    obtenerPerfilEmpleadoCompleto,
+    obtenerPerfilClienteCompleto
 };
 

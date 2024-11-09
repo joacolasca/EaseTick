@@ -71,4 +71,20 @@ router.get('/perfil-empleado/:id', async (req, res) => {
     }
 });
 
+router.get('/perfil-cliente/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const perfilCliente = await usuarioService.obtenerPerfilClienteCompleto(id);
+        return res.status(200).json({
+            success: true,
+            data: perfilCliente
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
