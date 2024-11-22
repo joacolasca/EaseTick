@@ -341,6 +341,15 @@ class TicketService {
             throw new Error(`Error en servicio obtenerTicketsPorMesCliente: ${error.message}`);
         }
     }
+
+    async agregarCalificacion(idTicket, idUsuario, puntaje) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.agregarCalificacion(idTicket, idUsuario, puntaje);
+        } catch (error) {
+            throw new Error(`Error al agregar calificación: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

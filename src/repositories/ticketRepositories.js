@@ -1162,6 +1162,47 @@ async obtenerInformacionCompletaDeTicket(id) {
             throw new Error(`Error en obtenerTicketsPorMesCliente: ${error.message}`);
         }
     }
+
+    async agregarCalificacion(idTicket, idUsuario, puntaje) {
+        try {
+            // Obtener el empleado asociado al ticket
+            const { data: ticket, error: ticketError } = await supabase
+                .from('ticket')
+                .select('fkusuario')
+                .eq('id', idTicket)
+                .single();
+
+            if (ticketError) throw new Error(ticketError.message);
+
+            // Verificar que el usuario sea un cliente (fkrol = 1)
+            const { data: usuario, error: usuarioError } = await supabase
+                .from('usuario')
+                .select('fkrol')
+                .eq('id', idUsuario)
+                .single();
+
+            if (usuarioError) throw new Error(usuarioError.message);
+            
+            if (usuario.fkrol !== 1) {
+                throw new Error('Solo los clientes pueden calificar tickets');
+            }
+
+            // Insertar nueva calificación
+            const { data, error } = await supabase
+                .from('calificacion')
+                .insert([{
+                    puntaje: puntaje,
+                    fkusuario: ticket.fkusuario
+                }])
+                .select();
+
+            if (error) throw new Error(error.message);
+            return data[0];
+        } catch (error) {
+            console.error(`Error en agregarCalificacion: ${error.message}`);
+            throw error;
+        }
+    }
 }
 
 

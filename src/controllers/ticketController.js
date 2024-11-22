@@ -392,4 +392,18 @@ router.get("/ticketsPorMesCliente/:id", async (req, res) => {
     }
 });
 
+router.post("/:id/calificar", async (req, res) => {
+    const { id } = req.params;
+    const { idUsuario, puntaje } = req.body;
+    
+    try {
+        const resultado = await svc.agregarCalificacion(id, idUsuario, puntaje);
+        return res.status(200).json({ success: true, data: resultado });
+    } catch (error) {
+        return res.status(500).json({ 
+            error: `Error al calificar el ticket: ${error.message}` 
+        });
+    }
+});
+
 module.exports = router;
