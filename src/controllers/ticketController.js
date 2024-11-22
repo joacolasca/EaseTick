@@ -406,4 +406,16 @@ router.post("/:id/calificar", async (req, res) => {
     }
 });
 
+router.get("/:id/verificarCalificacion", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const yaCalificado = await svc.verificarTicketCalificado(id);
+        return res.status(200).json({ success: true, yaCalificado });
+    } catch (error) {
+        return res.status(500).json({ 
+            error: `Error al verificar calificación: ${error.message}` 
+        });
+    }
+});
+
 module.exports = router;

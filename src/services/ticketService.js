@@ -350,6 +350,15 @@ class TicketService {
             throw new Error(`Error al agregar calificación: ${error.message}`);
         }
     }
+
+    async verificarTicketCalificado(idTicket) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.verificarTicketCalificado(idTicket);
+        } catch (error) {
+            throw new Error(`Error al verificar calificación del ticket: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

@@ -1187,12 +1187,25 @@ async obtenerInformacionCompletaDeTicket(id) {
                 throw new Error('Solo los clientes pueden calificar tickets');
             }
 
+            // Verificar si el ticket ya fue calificado
+            const { data: existingRating, error: existingError } = await supabase
+                .from('calificacion')
+                .select('id')
+                .eq('fkticket', idTicket);
+
+            if (existingError) throw new Error(existingError.message);
+
+            if (existingRating.length > 0) {
+                throw new Error('Este ticket ya ha sido calificado');
+            }
+
             // Insertar nueva calificación
             const { data, error } = await supabase
                 .from('calificacion')
                 .insert([{
                     puntaje: puntaje,
-                    fkusuario: ticket.fkusuario
+                    fkusuario: ticket.fkusuario,
+                    fkticket: idTicket
                 }])
                 .select();
 
@@ -1200,6 +1213,23 @@ async obtenerInformacionCompletaDeTicket(id) {
             return data[0];
         } catch (error) {
             console.error(`Error en agregarCalificacion: ${error.message}`);
+            throw error;
+        }
+    }
+
+    async verificarTicketCalificado(idTicket) {
+        try {
+            // Verificar si existe una calificación para este ticket específico
+            const { data, error } = await supabase
+                .from('calificacion')
+                .select('id')
+                .eq('fkticket', idTicket);
+
+            if (error) throw new Error(error.message);
+
+            return data.length > 0;
+        } catch (error) {
+            console.error(`Error en verificarTicketCalificado: ${error.message}`);
             throw error;
         }
     }
