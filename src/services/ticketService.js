@@ -203,10 +203,10 @@ class TicketService {
         }
     }
 
-    async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado) {
+    async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo) {
         try {
             const repo = new TicketRepository();
-            return await repo.enviarMensaje(idTicket, idUsuario, contenido, esEmpleado);
+            return await repo.enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo);
         } catch (error) {
             throw new Error(`Error al enviar mensaje: ${error.message}`);
         }

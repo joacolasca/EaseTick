@@ -152,10 +152,9 @@ class TicketRepository {
                     id,
                     asunto,
                     fechacreacion,
-                    fechafinalizado,
                     empresa:fkempresa(nombre),
                     estado:fkestado(nombre),
-                    prioridad:fkprioridad(nombre),
+                    prioridad:fkprioridad(nombre, caducidad),
                     usuario:fkusuario(nombre)
                 `)
                 .eq('fkusuario', id);
@@ -796,56 +795,91 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
     try {
         const { data, error } = await supabase
             .from('mensaje')
-            .select('*')
-            .eq('fkticket', idTicket)
-            .order('fechacreacion', { ascending: true });
-
-        if (error) {
-            throw new Error(error.message);
-        }
-        return data;
-    } catch (error) {
-        console.error(`Error al obtener mensajes del ticket: ${error.message}`);
-        throw error;
-    }
-}
-
-async obtenerMensajesDeTicket(idTicket) {
-    try {
-        const { data, error } = await supabase
-            .from('mensaje')
-            .select('*, fkCliente(nombre), fkEmpleado(nombre)')
+            .select(`
+                *,
+                fkCliente:fkCliente(nombre),
+                fkEmpleado:fkEmpleado(nombre)
+            `)
             .eq('fkticket', idTicket)
             .order('fechacreacion', { ascending: true });
 
         if (error) throw new Error(error.message);
         return data;
     } catch (error) {
-        console.error(`Error al obtener mensajes del ticket: ${error.message}`);
+        console.error('Error en obtenerMensajesDeTicket:', error);
         throw error;
     }
 }
 
-async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado) {
+async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) {
     try {
-        const { data, error } = await supabase
+        let archivoUrl = null;
+        let archivoNombre = null;
+
+        if (archivo) {
+            const sanitizedFileName = archivo.originalname
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9.]/g, '_');
+
+            const fileName = `tickets/${idTicket}/${Date.now()}-${sanitizedFileName}`;
+            
+            // Subir el archivo
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('chat-archivos')
+                .upload(fileName, archivo.buffer, {
+                    contentType: archivo.mimetype,
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (uploadError) {
+                console.error('Error al subir archivo:', uploadError);
+                throw new Error(`Error al subir archivo: ${uploadError.message}`);
+            }
+
+            // Obtener la URL pública
+            const { data } = supabase.storage
+                .from('chat-archivos')
+                .getPublicUrl(fileName);
+
+            // Construir la URL completa
+            archivoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/chat-archivos/${fileName}`;
+            archivoNombre = archivo.originalname;
+
+            console.log('URL pública generada:', archivoUrl); // Debug
+        }
+
+        // Insertar el mensaje
+        const { data: mensaje, error: mensajeError } = await supabase
             .from('mensaje')
             .insert([
                 {
                     fkticket: idTicket,
                     fkCliente: esEmpleado ? null : idUsuario,
                     fkEmpleado: esEmpleado ? idUsuario : null,
-                    contenido: contenido,
-                    fechacreacion: new Date().toISOString()
+                    contenido: contenido || '',
+                    fechacreacion: new Date().toISOString(),
+                    archivo_url: archivoUrl,
+                    archivo_nombre: archivoNombre
                 }
             ])
-            .select('*, fkCliente(nombre), fkEmpleado(nombre)');
+            .select(`
+                *,
+                fkCliente(nombre),
+                fkEmpleado(nombre)
+            `)
+            .single();
 
-        if (error) throw new Error(error.message);
+        if (mensajeError) {
+            console.error('Error al insertar mensaje:', mensajeError);
+            throw new Error(`Error al insertar mensaje: ${mensajeError.message}`);
+        }
 
-        return data[0];
+        console.log('Mensaje guardado:', mensaje); // Debug
+        return mensaje;
     } catch (error) {
-        console.error(`Error al enviar mensaje: ${error.message}`);
+        console.error('Error completo en enviarMensaje:', error);
         throw error;
     }
 }
@@ -1240,30 +1274,3 @@ async obtenerInformacionCompletaDeTicket(id) {
 
 
 module.exports = TicketRepository;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

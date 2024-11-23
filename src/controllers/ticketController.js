@@ -3,6 +3,14 @@ require('dotenv').config();
 const TicketService = require('../services/ticketService');
 const req = require('express/lib/request');
 const res = require('express/lib/response');
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB límite
+    }
+});
 
 const router = Router();
 const svc = new TicketService();
@@ -25,14 +33,33 @@ router.get("/:id/mensajes", async (req, res) => {
         return res.status(500).json({ error: `Error al obtener mensajes: ${e.message}` });
     }
 });
-router.post("/:id/mensaje", async (req, res) => {
+router.post("/:id/mensaje", upload.single('archivo'), async (req, res) => {
     const { id } = req.params;
     const { contenido, userId, isEmployee } = req.body;
+    const archivo = req.file;
+
+    console.log('Archivo recibido:', archivo);
+    console.log('Datos recibidos:', { id, contenido, userId, isEmployee });
+
     try {
-        const mensaje = await svc.enviarMensaje(id, userId, contenido, isEmployee);
-        return res.status(200).json({ success: true, mensaje });
+        const mensaje = await svc.enviarMensaje(
+            id, 
+            userId, 
+            contenido, 
+            isEmployee === 'true', 
+            archivo
+        );
+
+        return res.status(200).json({ 
+            success: true, 
+            mensaje 
+        });
     } catch (e) {
-        return res.status(500).json({ error: `Error al enviar mensaje: ${e.message}` });
+        console.error('Error completo en controlador mensaje:', e);
+        return res.status(500).json({ 
+            error: `Error al enviar mensaje: ${e.message}`,
+            details: e.stack 
+        });
     }
 });
 router.post("/:id/cerrar", async (req, res) => {

@@ -33,6 +33,8 @@ app.use("/front", express.static("public"));
 app.use('/tickets', TicketRouter);
 app.use('/users', userController);
 app.use('/usuarios', usuarioController);
+app.use('/users', userController);
+app.use('/usuarios', usuarioController);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
