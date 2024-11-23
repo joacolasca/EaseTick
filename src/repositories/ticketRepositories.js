@@ -152,9 +152,10 @@ class TicketRepository {
                     id,
                     asunto,
                     fechacreacion,
+                    fechafinalizado,
                     empresa:fkempresa(nombre),
                     estado:fkestado(nombre),
-                    prioridad:fkprioridad(nombre, caducidad),
+                    prioridad:fkprioridad(nombre),
                     usuario:fkusuario(nombre)
                 `)
                 .eq('fkusuario', id);
