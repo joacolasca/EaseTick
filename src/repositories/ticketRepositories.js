@@ -1268,6 +1268,56 @@ async obtenerInformacionCompletaDeTicket(id) {
             throw error;
         }
     }
+
+    async crearMensaje(idTicket, userId, contenido, isEmployee, archivo) {
+        try {
+            let archivoUrl = null;
+            let archivoNombre = null;
+
+            // Si hay archivo, procesar y subir a Supabase Storage
+            if (archivo) {
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('archivos-mensajes')
+                    .upload(
+                        `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`,
+                        archivo.buffer,
+                        {
+                            contentType: archivo.mimetype
+                        }
+                    );
+
+                if (uploadError) throw uploadError;
+
+                // Obtener URL pública del archivo
+                const { data: { publicUrl } } = supabase.storage
+                    .from('archivos-mensajes')
+                    .getPublicUrl(uploadData.path);
+
+                archivoUrl = publicUrl;
+                archivoNombre = archivo.originalname;
+            }
+
+            // Crear el mensaje en la base de datos
+            const { data, error } = await supabase
+                .from('mensaje')
+                .insert([{
+                    fkticket: idTicket,
+                    contenido: contenido,
+                    fkCliente: !isEmployee ? userId : null,
+                    fkEmpleado: isEmployee ? userId : null,
+                    archivo_url: archivoUrl,
+                    archivo_nombre: archivoNombre,
+                    fechacreacion: new Date().toISOString()
+                }])
+                .select('*, fkEmpleado(*), fkCliente(*)');
+
+            if (error) throw error;
+            return data[0];
+        } catch (error) {
+            console.error('Error en crearMensaje:', error);
+            throw error;
+        }
+    }
 }
 
 

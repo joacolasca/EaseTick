@@ -1,6 +1,15 @@
 const express = require('express');
-const bodyParser = require('body-parser'); 
 const cors = require('cors');
+const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const io = require('socket.io')(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
+const bodyParser = require('body-parser'); 
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const TicketRouter = require('./controllers/ticketController')
@@ -13,21 +22,17 @@ const authMiddleware = require('./middleware/authMiddleware'); // Para proteger 
 
 const userController = require('./controllers/userController');
 const usuarioController = require('./controllers/usuarioController');
-
-const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
 
 const port = process.env.PORT || 5000;
 
 console.log(process.env.PORT)
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // o tu origen del frontend
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use("/front", express.static("public"));
 app.use('/tickets', TicketRouter);

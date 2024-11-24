@@ -38,27 +38,33 @@ router.post("/:id/mensaje", upload.single('archivo'), async (req, res) => {
     const { contenido, userId, isEmployee } = req.body;
     const archivo = req.file;
 
-    console.log('Archivo recibido:', archivo);
-    console.log('Datos recibidos:', { id, contenido, userId, isEmployee });
-
     try {
         const mensaje = await svc.enviarMensaje(
             id, 
             userId, 
-            contenido, 
+            contenido || '', 
             isEmployee === 'true', 
             archivo
         );
+
+        // Verificar si io está disponible antes de emitir
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`ticket-${id}`).emit('new-message', mensaje);
+        } else {
+            console.warn('Socket.IO no está disponible');
+        }
 
         return res.status(200).json({ 
             success: true, 
             mensaje 
         });
-    } catch (e) {
-        console.error('Error completo en controlador mensaje:', e);
+    } catch (error) {
+        console.error('Error completo en controlador mensaje:', error);
         return res.status(500).json({ 
-            error: `Error al enviar mensaje: ${e.message}`,
-            details: e.stack 
+            success: false,
+            error: `Error al enviar mensaje: ${error.message}`,
+            details: error.stack 
         });
     }
 });

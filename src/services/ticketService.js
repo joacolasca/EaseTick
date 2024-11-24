@@ -203,11 +203,28 @@ class TicketService {
         }
     }
 
-    async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo) {
+    async enviarMensaje(idTicket, userId, contenido, isEmployee, archivo) {
         try {
             const repo = new TicketRepository();
-            return await repo.enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo);
+            console.log('Datos en servicio:', {
+                idTicket,
+                userId,
+                contenido,
+                isEmployee,
+                tieneArchivo: !!archivo
+            });
+            
+            const mensaje = await repo.enviarMensaje(
+                idTicket,
+                userId,
+                contenido,
+                isEmployee,
+                archivo
+            );
+            
+            return mensaje;
         } catch (error) {
+            console.error('Error en servicio enviarMensaje:', error);
             throw new Error(`Error al enviar mensaje: ${error.message}`);
         }
     }
