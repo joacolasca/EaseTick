@@ -275,4 +275,48 @@ router.get('/perfil-miembro/:id', async (req, res) => {
     }
 });
 
+router.put('/cambiar-email', async (req, res) => {
+    try {
+        const { email, nuevoEmail } = req.body;
+        
+        // Verificar si el nuevo email ya existe
+        const { data: existingUser } = await supabase
+            .from('usuario')
+            .select('correoelectronico')
+            .eq('correoelectronico', nuevoEmail)
+            .single();
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nuevo correo electrónico ya está registrado'
+            });
+        }
+
+        // Actualizar el email
+        const { data, error } = await supabase
+            .from('usuario')
+            .update({ correoelectronico: nuevoEmail })
+            .eq('correoelectronico', email)
+            .select();
+
+        if (error) {
+            throw error;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Email actualizado correctamente',
+            data: data[0]
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar el email',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
