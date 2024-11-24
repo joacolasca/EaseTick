@@ -359,6 +359,7 @@ class TicketService {
             throw new Error(`Error al verificar calificación del ticket: ${error.message}`);
         }
     }
+    
 }
 
 module.exports = TicketService;

@@ -81,13 +81,18 @@ const obtenerPerfilEmpleadoCompleto = async (id) => {
 const obtenerPerfilClienteCompleto = async (id) => {
     try {
         const { data, error } = await supabase
-            .from('empresa')
+            .from('usuario')
             .select(`
                 id,
                 nombre,
                 correoelectronico,
-                telefono,
-                tipo
+                empresa:fkempresa (
+                    id,
+                    nombre,
+                    correoelectronico,
+                    telefono,
+                    tipo
+                )
             `)
             .eq('id', id)
             .single();
@@ -96,14 +101,14 @@ const obtenerPerfilClienteCompleto = async (id) => {
         if (!data) throw new Error('No se encontraron datos del cliente');
 
         return {
+            id: data.id,
             nombre: data.nombre,
             correoelectronico: data.correoelectronico,
-            telefono: data.telefono,
             empresa: {
-                nombre: data.nombre,
-                correoelectronico: data.correoelectronico,
-                telefono: data.telefono,
-                tipo: data.tipo
+                nombre: data.empresa.nombre,
+                correoelectronico: data.empresa.correoelectronico,
+                telefono: data.empresa.telefono,
+                tipo: data.empresa.tipo
             }
         };
     } catch (error) {
@@ -112,9 +117,44 @@ const obtenerPerfilClienteCompleto = async (id) => {
     }
 };
 
+const obtenerPerfilMiembroCompleto = async (id) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuario')
+            .select(`
+                id,
+                nombre,
+                correoelectronico,
+                empresa:fkempresa (
+                    nombre,
+                    correoelectronico
+                )
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('No se encontraron datos del miembro');
+
+        return {
+            id: data.id,
+            nombre: data.nombre,
+            correoelectronico: data.correoelectronico,
+            empresa: {
+                nombre: data.empresa.nombre,
+                correoelectronico: data.empresa.correoelectronico
+            }
+        };
+    } catch (error) {
+        console.error('Error obteniendo perfil del miembro:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     findUsuarioByCorreoElectronico,
     obtenerPerfilEmpleadoCompleto,
-    obtenerPerfilClienteCompleto
+    obtenerPerfilClienteCompleto,
+    obtenerPerfilMiembroCompleto
 };
 

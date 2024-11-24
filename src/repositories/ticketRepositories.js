@@ -996,7 +996,7 @@ async obtenerInformacionCompletaDeTicket(id) {
             // Luego, obtenemos todos los usuarios de esa empresa
             const { data: equipo, error: equipoError } = await supabase
                 .from('usuario')
-                .select('nombre, correoelectronico')
+                .select('id, nombre, correoelectronico')
                 .eq('fkempresa', cliente.fkempresa);
 
             if (equipoError) throw new Error(equipoError.message);

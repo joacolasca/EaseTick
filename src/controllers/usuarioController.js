@@ -259,4 +259,20 @@ router.get('/empresas-no-clientes', async (req, res) => {
     }
 });
 
+router.get('/perfil-miembro/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const perfilMiembro = await usuarioService.obtenerPerfilMiembroCompleto(id);
+        return res.status(200).json({
+            success: true,
+            data: perfilMiembro
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
