@@ -102,6 +102,18 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error('Error de socket:', error);
   });
+
+  socket.on('ticket-closed', async (data) => {
+    try {
+      console.log('Ticket cerrado:', data);
+      // Emitir a todos los clientes en la sala del ticket
+      io.to(`ticket-${data.ticketId}`).emit('ticket-closed-notification', {
+        mensaje: data.mensaje
+      });
+    } catch (error) {
+      console.error('Error al manejar cierre de ticket:', error);
+    }
+  });
 });
 
 // Ruta de login

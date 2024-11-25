@@ -232,15 +232,15 @@ class TicketService {
     async cerrarTicket(idTicket) {
         try {
             const repo = new TicketRepository();
-            const resultado = await repo.cerrarTicket(idTicket);
+            const ticket = await repo.cerrarTicket(idTicket);
             
-            if (!resultado) {
+            if (!ticket) {
                 throw new Error('No se pudo cerrar el ticket');
             }
 
             return {
                 success: true,
-                ticket: resultado
+                ticket
             };
         } catch (error) {
             console.error('Error en cerrarTicket:', error);
