@@ -457,4 +457,24 @@ router.get("/estadisticas/:id", async (req, res) => {
     }
 });
 
+router.get("/notificaciones/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const notificaciones = await svc.obtenerNotificaciones(id);
+        return res.status(200).json({ success: true, message: notificaciones });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener notificaciones: ${e.message}` });
+    }
+});
+
+router.put("/notificaciones/:id/leer", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const notificacion = await svc.marcarNotificacionComoLeida(id);
+        return res.status(200).json({ success: true, message: notificacion });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al marcar notificación como leída: ${e.message}` });
+    }
+});
+
 module.exports = router;

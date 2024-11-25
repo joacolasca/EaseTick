@@ -717,6 +717,20 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
 
         if (error) throw new Error(error.message);
 
+        // Crear notificación para el empleado asignado
+        const { error: notificacionError } = await supabase
+            .from('notificacion')
+            .insert([{
+                fkusuario: empleadoConMenosTickets.id,
+                tipo: 'nuevo_ticket',
+                contenido: `Se te ha asignado un nuevo ticket: ${asunto}`,
+                fkticket: data.id,
+                fechacreacion: new Date().toISOString(),
+                leido: false
+            }]);
+
+        if (notificacionError) throw new Error(notificacionError.message);
+
         // Insertar el mensaje inicial
         const { data: mensajeData, error: mensajeError } = await supabase
             .from('mensaje')
@@ -1345,6 +1359,62 @@ async obtenerInformacionCompletaDeTicket(id) {
         } catch (error) {
             console.error('Error en obtenerEstadisticasTickets:', error);
             throw error;
+        }
+    }
+
+    async crearNotificacion(idUsuario, tipo, contenido, idTicket) {
+        try {
+            const { data, error } = await supabase
+                .from('notificacion')
+                .insert([{
+                    fkusuario: idUsuario,
+                    tipo: tipo,
+                    contenido: contenido,
+                    fkticket: idTicket
+                }])
+                .select();
+
+            if (error) throw error;
+            return data[0];
+        } catch (error) {
+            throw new Error(`Error al crear notificación: ${error.message}`);
+        }
+    }
+
+    async obtenerNotificaciones(idUsuario) {
+        try {
+            const { data, error } = await supabase
+                .from('notificacion')
+                .select(`
+                    *,
+                    ticket:fkticket (
+                        asunto,
+                        id,
+                        fechacreacion
+                    )
+                `)
+                .eq('fkusuario', idUsuario)
+                .order('fechacreacion', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            throw new Error(`Error al obtener notificaciones: ${error.message}`);
+        }
+    }
+
+    async marcarNotificacionComoLeida(idNotificacion) {
+        try {
+            const { data, error } = await supabase
+                .from('notificacion')
+                .update({ leido: true })
+                .eq('id', idNotificacion)
+                .select();
+
+            if (error) throw error;
+            return data[0];
+        } catch (error) {
+            throw new Error(`Error al marcar notificación como leída: ${error.message}`);
         }
     }
 }

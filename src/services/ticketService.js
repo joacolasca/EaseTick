@@ -399,6 +399,33 @@ class TicketService {
             throw new Error(`Error al obtener estadísticas de tickets: ${error.message}`);
         }
     }
+
+    async crearNotificacion(idUsuario, tipo, contenido, idTicket) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.crearNotificacion(idUsuario, tipo, contenido, idTicket);
+        } catch (error) {
+            throw new Error(`Error al crear notificación: ${error.message}`);
+        }
+    }
+
+    async obtenerNotificaciones(idUsuario) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.obtenerNotificaciones(idUsuario);
+        } catch (error) {
+            throw new Error(`Error al obtener notificaciones: ${error.message}`);
+        }
+    }
+
+    async marcarNotificacionComoLeida(idNotificacion) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.marcarNotificacionComoLeida(idNotificacion);
+        } catch (error) {
+            throw new Error(`Error al marcar notificación como leída: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;
