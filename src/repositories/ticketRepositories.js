@@ -687,21 +687,18 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
 
         if (empleadosError) throw new Error(empleadosError.message);
 
-        // Inicializar el conteo de tickets por empleado
-        const ticketCounts = {};
+        // Obtener conteo de tickets por empleado
+        const { data: tickets, error: ticketsError } = await supabase
+            .from('ticket')
+            .select('fkusuario');
 
-        // Contar los tickets por empleado
-        for (const empleado of empleados) {
-            const { data: tickets, error: ticketsError } = await supabase
-                .from('ticket')
-                .select('id')
-                .eq('fkusuario', empleado.id)
-                .eq('fkestado', 1); // Solo tickets abiertos
+        if (ticketsError) throw new Error(ticketsError.message);
 
-            if (ticketsError) throw new Error(ticketsError.message);
-
-            ticketCounts[empleado.id] = tickets.length;
-        }
+        // Contar tickets por empleado
+        const ticketCounts = tickets.reduce((acc, ticket) => {
+            acc[ticket.fkusuario] = (acc[ticket.fkusuario] || 0) + 1;
+            return acc;
+        }, {});
 
         // Encontrar el empleado con menos tickets
         const empleadoConMenosTickets = empleados.reduce((minEmpleado, empleado) => {
@@ -709,7 +706,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
             return ticketCount < minEmpleado.count ? { id: empleado.id, count: ticketCount } : minEmpleado;
         }, { id: null, count: Infinity });
 
-        // Crear el ticket con los valores numéricos
+        // Crear el ticket
         const { data, error } = await supabase
             .from('ticket')
             .insert([
@@ -729,9 +726,25 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
 
         if (error) throw new Error(error.message);
 
+        // Insertar el mensaje inicial (ahora solo con fkCliente)
+        const { data: mensajeData, error: mensajeError } = await supabase
+            .from('mensaje')
+            .insert([
+                {
+                    fkticket: data.id,
+                    fkCliente: idClienteNum,
+                    contenido: mensaje,
+                    fechacreacion: new Date().toISOString(),
+                    fkEmpleado: null // Ya no asignamos el empleado al mensaje inicial
+                }
+            ])
+            .select();
+
+        if (mensajeError) throw new Error(mensajeError.message);
+
         // Crear notificación para el empleado asignado
         const fechaActual = new Date();
-        fechaActual.setHours(0, 0, 0, 0); // Esto eliminará las horas y dejará solo la fecha
+        fechaActual.setHours(0, 0, 0, 0);
 
         const { error: notificacionError } = await supabase
             .from('notificacion')
@@ -746,23 +759,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
 
         if (notificacionError) throw new Error(notificacionError.message);
 
-        // Insertar el mensaje inicial
-        const { data: mensajeData, error: mensajeError } = await supabase
-            .from('mensaje')
-            .insert([
-                {
-                    fkticket: data.id,
-                    fkCliente: idClienteNum,
-                    contenido: mensaje,
-                    fechacreacion: new Date().toISOString(),
-                    fkEmpleado: empleadoConMenosTickets.id
-                }
-            ])
-            .select();
-
-        if (mensajeError) throw new Error(mensajeError.message);
-
-        return { ticket: data, mensaje: mensajeData };
+        return { ticket: data, mensaje: mensajeData[0] };
     } catch (error) {
         console.error(`Error en crearTicket: ${error.message}`);
         throw error;
