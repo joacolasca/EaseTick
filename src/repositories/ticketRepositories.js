@@ -174,25 +174,24 @@ class TicketRepository {
     async obtenerTicketsPorDiaDeLaSemana(id) {
         try {
             const hoy = new Date();
-            const diaSemana = hoy.getDay(); // 0 (domingo) a 6 (sábado)
             
-            // Calcular el inicio de la semana (lunes)
+            // Obtener el lunes de la semana actual
             const inicioSemana = new Date(hoy);
-            inicioSemana.setDate(hoy.getDate() - ((diaSemana + 6) % 7));
+            inicioSemana.setDate(hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1));
             inicioSemana.setHours(0, 0, 0, 0);
 
-            // Calcular el fin de la semana (domingo)
+            // Obtener el domingo de la semana actual
             const finSemana = new Date(inicioSemana);
             finSemana.setDate(inicioSemana.getDate() + 6);
             finSemana.setHours(23, 59, 59, 999);
 
+            // Obtener todos los tickets de la semana
             const { data, error } = await supabase
                 .from('ticket')
                 .select('fechacreacion')
-                .eq('fkcliente', id)
+                .eq('fkusuario', id)
                 .gte('fechacreacion', inicioSemana.toISOString())
-                .lte('fechacreacion', finSemana.toISOString())
-                .order('fechacreacion');
+                .lte('fechacreacion', finSemana.toISOString());
 
             if (error) throw new Error(error.message);
 
@@ -201,18 +200,20 @@ class TicketRepository {
                 'L': 0, 'M': 0, 'X': 0, 'J': 0, 'V': 0, 'S': 0, 'D': 0
             };
 
-            // Contar tickets por día, moviendo cada fecha un día adelante
+            // Mapeo de números de día a letras
+            const mapaDias = {
+                0: 'D', 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S'
+            };
+
+            // Contar tickets por día
             data.forEach(ticket => {
                 const fechaTicket = new Date(ticket.fechacreacion);
-                fechaTicket.setDate(fechaTicket.getDate() + 1); // Mover un día adelante
-                const dia = fechaTicket.getDay(); // 0 = Domingo, 1 = Lunes, etc.
-                const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
-                ticketsPorDia[dias[dia]]++;
+                const diaNumero = fechaTicket.getDay();
+                const diaLetra = mapaDias[diaNumero];
+                ticketsPorDia[diaLetra]++;
             });
 
-            // Convertir a array manteniendo el orden L,M,X,J,V,S,D
-            const ordenDias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-            return ordenDias.map(dia => ticketsPorDia[dia]);
+            return ticketsPorDia;
         } catch (error) {
             console.error('Error en obtenerTicketsPorDiaDeLaSemana:', error);
             throw error;
@@ -718,6 +719,9 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
         if (error) throw new Error(error.message);
 
         // Crear notificación para el empleado asignado
+        const fechaActual = new Date();
+        fechaActual.setHours(0, 0, 0, 0); // Esto eliminará las horas y dejará solo la fecha
+
         const { error: notificacionError } = await supabase
             .from('notificacion')
             .insert([{
@@ -725,7 +729,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
                 tipo: 'nuevo_ticket',
                 contenido: `Se te ha asignado un nuevo ticket: ${asunto}`,
                 fkticket: data.id,
-                fechacreacion: new Date().toISOString(),
+                fechacreacion: fechaActual.toISOString(),
                 leido: false
             }]);
 
@@ -1394,6 +1398,7 @@ async obtenerInformacionCompletaDeTicket(id) {
                     )
                 `)
                 .eq('fkusuario', idUsuario)
+                .eq('leido', false)  // Solo traer las no leídas
                 .order('fechacreacion', { ascending: false });
 
             if (error) throw error;

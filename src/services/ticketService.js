@@ -421,7 +421,7 @@ class TicketService {
     async marcarNotificacionComoLeida(idNotificacion) {
         try {
             const repo = new TicketRepository();
-            return await repo.marcarNotificacionComoLeida(idNotificacion);
+            await repo.marcarNotificacionComoLeida(idNotificacion);
         } catch (error) {
             throw new Error(`Error al marcar notificación como leída: ${error.message}`);
         }

@@ -470,10 +470,21 @@ router.get("/notificaciones/:id", async (req, res) => {
 router.put("/notificaciones/:id/leer", async (req, res) => {
     const { id } = req.params;
     try {
-        const notificacion = await svc.marcarNotificacionComoLeida(id);
-        return res.status(200).json({ success: true, message: notificacion });
+        await svc.marcarNotificacionComoLeida(id);
+        return res.status(200).json({ success: true, message: 'Notificación marcada como leída' });
     } catch (e) {
-        return res.status(500).send({ error: `Error al marcar notificación como leída: ${e.message}` });
+        return res.status(500).json({ error: `Error al marcar notificación como leída: ${e.message}` });
+    }
+});
+
+router.post("/:id/marcarNotificacionLeida", async (req, res) => {
+    try {
+        const { idNotificacion } = req.params;
+        const service = new TicketService();
+        await service.marcarNotificacionComoLeida(idNotificacion);
+        res.json({ success: true, message: 'Notificación marcada como leída' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
