@@ -832,41 +832,49 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
     }
 }
 
-async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo) {
+async enviarMensaje(idTicket, userId, contenido, isEmployee, archivo) {
     try {
         let archivoUrl = null;
         let archivoNombre = null;
 
         if (archivo) {
+            console.log('Intentando subir archivo a Supabase Storage');
+            
+            const uploadPath = `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`;
+            console.log('Ruta de subida:', uploadPath);
+
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('chat-archivos')
-                .upload(
-                    `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`,
-                    archivo.buffer,
-                    {
-                        contentType: archivo.mimetype
-                    }
-                );
+                .upload(uploadPath, archivo.buffer, {
+                    contentType: archivo.mimetype,
+                    cacheControl: '3600'
+                });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('Error al subir archivo:', uploadError);
+                throw uploadError;
+            }
 
-            // Obtener URL pública del archivo
-            const { data: { publicUrl } } = supabase.storage
+            console.log('Archivo subido exitosamente:', uploadData);
+
+            const { data: urlData } = await supabase.storage
                 .from('chat-archivos')
-                .getPublicUrl(uploadData.path);
+                .getPublicUrl(uploadPath);
 
-            archivoUrl = publicUrl;
+            archivoUrl = urlData.publicURL;
             archivoNombre = archivo.originalname;
+
+            console.log('URL pública generada:', archivoUrl);
         }
 
         // Crear mensaje
-        const { data: mensaje, error: mensajeError } = await supabase
+        const { data: mensaje, error } = await supabase
             .from('mensaje')
             .insert([{
                 fkticket: idTicket,
                 contenido: contenido || '',
-                fkCliente: !esEmpleado ? idUsuario : null,
-                fkEmpleado: esEmpleado ? idUsuario : null,
+                fkCliente: !isEmployee ? userId : null,
+                fkEmpleado: isEmployee ? userId : null,
                 archivo_url: archivoUrl,
                 archivo_nombre: archivoNombre,
                 fechacreacion: new Date().toISOString()
@@ -874,21 +882,15 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo) {
             .select('*, fkEmpleado(*), fkCliente(*)')
             .single();
 
-        if (mensajeError) throw mensajeError;
-
-        // Si el mensaje es del cliente, actualizar el estado del ticket a "Esperando respuesta"
-        if (!esEmpleado) {
-            const { error: ticketError } = await supabase
-                .from('ticket')
-                .update({ fkestado: 3 }) // 3 = Esperando respuesta
-                .eq('id', idTicket);
-
-            if (ticketError) throw ticketError;
+        if (error) {
+            console.error('Error al insertar mensaje:', error);
+            throw error;
         }
 
+        console.log('Mensaje insertado:', mensaje);
         return mensaje;
     } catch (error) {
-        console.error('Error en repositorio enviarMensaje:', error);
+        console.error('Error en enviarMensaje:', error);
         throw error;
     }
 }
@@ -1282,24 +1284,30 @@ async obtenerInformacionCompletaDeTicket(id) {
             let archivoUrl = null;
             let archivoNombre = null;
 
-            // Si hay archivo, procesar y subir a Supabase Storage
             if (archivo) {
+                console.log('Intentando subir archivo a Supabase Storage');
+                
+                const uploadPath = `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`;
+                console.log('Ruta de subida:', uploadPath);
+
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('archivos-mensajes')
-                    .upload(
-                        `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`,
-                        archivo.buffer,
-                        {
-                            contentType: archivo.mimetype
-                        }
-                    );
+                    .upload(uploadPath, archivo.buffer, {
+                        contentType: archivo.mimetype
+                    });
 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                    console.error('Error al subir archivo:', uploadError);
+                    throw uploadError;
+                }
 
-                // Obtener URL pública del archivo
+                console.log('Archivo subido exitosamente:', uploadData);
+
                 const { data: { publicUrl } } = supabase.storage
                     .from('archivos-mensajes')
                     .getPublicUrl(uploadData.path);
+
+                console.log('URL pública generada:', publicUrl);
 
                 archivoUrl = publicUrl;
                 archivoNombre = archivo.originalname;
@@ -1322,7 +1330,7 @@ async obtenerInformacionCompletaDeTicket(id) {
             if (error) throw error;
             return data[0];
         } catch (error) {
-            console.error('Error en crearMensaje:', error);
+            console.error('Error detallado en crearMensaje:', error);
             throw error;
         }
     }

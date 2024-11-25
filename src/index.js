@@ -66,10 +66,22 @@ io.on('connection', (socket) => {
 
   socket.on('send-message', async (data) => {
     try {
+      console.log('Mensaje recibido en socket:', {
+        ticketId: data.ticketId,
+        userId: data.userId,
+        tieneArchivo: !!data.archivo
+      });
+
       const ticketService = new TicketService();
       
       let archivo = null;
       if (data.archivo && data.archivo.data) {
+        console.log('Procesando archivo:', {
+          nombre: data.archivo.name,
+          tipo: data.archivo.type,
+          tamaño: data.archivo.size
+        });
+
         const buffer = Buffer.from(data.archivo.data, 'base64');
         archivo = {
           buffer: buffer,
@@ -77,6 +89,7 @@ io.on('connection', (socket) => {
           originalname: data.archivo.name,
           size: data.archivo.size
         };
+        console.log('Archivo convertido a buffer');
       }
 
       const mensaje = await ticketService.enviarMensaje(
@@ -87,10 +100,14 @@ io.on('connection', (socket) => {
         archivo
       );
 
-      // Emitir el mensaje a todos los clientes en la sala
+      console.log('Mensaje guardado con éxito:', {
+        id: mensaje.id,
+        tieneArchivo: !!mensaje.archivo_url
+      });
+
       io.to(`ticket-${data.ticketId}`).emit('message-received', mensaje);
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      console.error('Error detallado al enviar mensaje:', error);
       socket.emit('message-error', { error: error.message });
     }
   });
