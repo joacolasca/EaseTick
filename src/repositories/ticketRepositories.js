@@ -893,9 +893,13 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) 
 
 async cerrarTicket(idTicket) {
     try {
+        const fechaActual = new Date().toISOString();
         const { data: ticket, error } = await supabase
             .from('ticket')
-            .update({ fkestado: 2 }) // Asumiendo que 2 es el estado "Cerrado"
+            .update({ 
+                fkestado: 2,  // Estado "Cerrado"
+                fechafinalizado: fechaActual 
+            })
             .eq('id', idTicket)
             .select()
             .single();
