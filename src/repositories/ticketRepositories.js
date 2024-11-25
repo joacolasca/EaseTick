@@ -206,9 +206,11 @@ class TicketRepository {
                 0: 'D', 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S'
             };
 
-            // Contar tickets por día
+            // Contar tickets por día, ajustando la zona horaria
             data.forEach(ticket => {
                 const fechaTicket = new Date(ticket.fechacreacion);
+                // Ajustar la zona horaria
+                fechaTicket.setHours(fechaTicket.getHours() + 3); // Ajuste para UTC-3 (Argentina)
                 const diaNumero = fechaTicket.getDay();
                 const diaLetra = mapaDias[diaNumero];
                 ticketsPorDia[diaLetra]++;
