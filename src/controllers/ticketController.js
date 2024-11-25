@@ -47,12 +47,9 @@ router.post("/:id/mensaje", upload.single('archivo'), async (req, res) => {
             archivo
         );
 
-        // Verificar si io está disponible antes de emitir
         const io = req.app.get('io');
         if (io) {
-            io.to(`ticket-${id}`).emit('new-message', mensaje);
-        } else {
-            console.warn('Socket.IO no está disponible');
+            io.to(`ticket-${id}`).emit('message-received', mensaje);
         }
 
         return res.status(200).json({ 
@@ -60,11 +57,10 @@ router.post("/:id/mensaje", upload.single('archivo'), async (req, res) => {
             mensaje 
         });
     } catch (error) {
-        console.error('Error completo en controlador mensaje:', error);
+        console.error('Error en controlador mensaje:', error);
         return res.status(500).json({ 
             success: false,
-            error: `Error al enviar mensaje: ${error.message}`,
-            details: error.stack 
+            error: error.message
         });
     }
 });

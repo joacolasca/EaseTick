@@ -205,7 +205,6 @@ class TicketService {
 
     async enviarMensaje(idTicket, userId, contenido, isEmployee, archivo) {
         try {
-            const repo = new TicketRepository();
             console.log('Datos en servicio:', {
                 idTicket,
                 userId,
@@ -213,15 +212,9 @@ class TicketService {
                 isEmployee,
                 tieneArchivo: !!archivo
             });
-            
-            const mensaje = await repo.enviarMensaje(
-                idTicket,
-                userId,
-                contenido,
-                isEmployee,
-                archivo
-            );
-            
+
+            const repo = new TicketRepository();
+            const mensaje = await repo.enviarMensaje(idTicket, userId, contenido, isEmployee, archivo);
             return mensaje;
         } catch (error) {
             console.error('Error en servicio enviarMensaje:', error);
@@ -373,10 +366,19 @@ class TicketService {
             const repo = new TicketRepository();
             return await repo.verificarTicketCalificado(idTicket);
         } catch (error) {
-            throw new Error(`Error al verificar calificación del ticket: ${error.message}`);
+            throw new Error(`Error al verificar calificaci��n del ticket: ${error.message}`);
         }
     }
     
+    async obtenerMensajeConDetalles(mensajeId) {
+        try {
+            const repo = new TicketRepository();
+            const mensaje = await repo.obtenerMensajeConDetalles(mensajeId);
+            return mensaje;
+        } catch (error) {
+            throw new Error(`Error al obtener detalles del mensaje: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

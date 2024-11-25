@@ -816,70 +816,58 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) 
         let archivoUrl = null;
         let archivoNombre = null;
 
-        if (archivo) {
-            const sanitizedFileName = archivo.originalname
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-zA-Z0-9.]/g, '_');
+        if (archivo && archivo.buffer) {
+            const timestamp = Date.now();
+            const sanitizedFileName = archivo.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+            const fileName = `ticket-${idTicket}/${timestamp}-${sanitizedFileName}`;
 
-            const fileName = `tickets/${idTicket}/${Date.now()}-${sanitizedFileName}`;
-            
-            // Subir el archivo
+            // Subir archivo
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('chat-archivos')
                 .upload(fileName, archivo.buffer, {
                     contentType: archivo.mimetype,
-                    cacheControl: '3600',
                     upsert: true
                 });
 
             if (uploadError) {
                 console.error('Error al subir archivo:', uploadError);
-                throw new Error(`Error al subir archivo: ${uploadError.message}`);
+                throw uploadError;
             }
 
-            // Obtener la URL pública
-            const { data } = supabase.storage
-                .from('chat-archivos')
-                .getPublicUrl(fileName);
-
-            // Construir la URL completa
-            archivoUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/chat-archivos/${fileName}`;
+            // Construir URL pública usando la URL base de Supabase
+            const supabaseUrl = process.env.SUPABASE_URL;
+            archivoUrl = `${supabaseUrl}/storage/v1/object/public/chat-archivos/${fileName}`;
             archivoNombre = archivo.originalname;
 
-            console.log('URL pública generada:', archivoUrl); // Debug
+            console.log('Archivo subido exitosamente:', {
+                url: archivoUrl,
+                nombre: archivoNombre,
+                fileName: fileName,
+                supabaseUrl: supabaseUrl
+            });
         }
 
-        // Insertar el mensaje
+        // Crear mensaje
         const { data: mensaje, error: mensajeError } = await supabase
             .from('mensaje')
-            .insert([
-                {
-                    fkticket: idTicket,
-                    fkCliente: esEmpleado ? null : idUsuario,
-                    fkEmpleado: esEmpleado ? idUsuario : null,
-                    contenido: contenido || '',
-                    fechacreacion: new Date().toISOString(),
-                    archivo_url: archivoUrl,
-                    archivo_nombre: archivoNombre
-                }
-            ])
-            .select(`
-                *,
-                fkCliente(nombre),
-                fkEmpleado(nombre)
-            `)
+            .insert([{
+                fkticket: idTicket,
+                contenido: contenido || '',
+                fkCliente: !esEmpleado ? idUsuario : null,
+                fkEmpleado: esEmpleado ? idUsuario : null,
+                archivo_url: archivoUrl,
+                archivo_nombre: archivoNombre,
+                fechacreacion: new Date().toISOString()
+            }])
+            .select('*, fkEmpleado(*), fkCliente(*)')
             .single();
 
-        if (mensajeError) {
-            console.error('Error al insertar mensaje:', mensajeError);
-            throw new Error(`Error al insertar mensaje: ${mensajeError.message}`);
-        }
-
-        console.log('Mensaje guardado:', mensaje); // Debug
+        if (mensajeError) throw mensajeError;
+        
+        console.log('Mensaje creado:', mensaje);
         return mensaje;
     } catch (error) {
-        console.error('Error completo en enviarMensaje:', error);
+        console.error('Error en enviarMensaje:', error);
         throw error;
     }
 }
@@ -1317,6 +1305,27 @@ async obtenerInformacionCompletaDeTicket(id) {
             console.error('Error en crearMensaje:', error);
             throw error;
         }
+    }
+
+    async obtenerMensajeConDetalles(mensajeId) {
+        const { data, error } = await supabase
+            .from('mensaje')
+            .select(`
+                *,
+                fkEmpleado (
+                    id,
+                    nombre
+                ),
+                fkCliente (
+                    id,
+                    nombre
+                )
+            `)
+            .eq('id', mensajeId)
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 }
 
