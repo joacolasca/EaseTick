@@ -426,6 +426,25 @@ class TicketService {
             throw new Error(`Error al marcar notificación como leída: ${error.message}`);
         }
     }
+
+    obtenerTicketsEsperandoRespuesta = async (id) => {
+        try {
+            const repo = new TicketRepository();
+            const tickets = await repo.obtenerTicketsEsperandoRespuesta(id);
+            return tickets;
+        } catch (error) {
+            throw new Error(`Error al obtener tickets esperando respuesta: ${error.message}`);
+        }
+    }
+
+    async obtenerNotificacionesYRecordatorios(idUsuario) {
+        try {
+            const repo = new TicketRepository();
+            return await repo.obtenerNotificacionesYRecordatorios(idUsuario);
+        } catch (error) {
+            throw new Error(`Error al obtener notificaciones y recordatorios: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

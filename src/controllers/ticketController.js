@@ -488,4 +488,24 @@ router.post("/:id/marcarNotificacionLeida", async (req, res) => {
     }
 });
 
+router.get("/ticketsEsperandoRespuesta/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const tickets = await svc.obtenerTicketsEsperandoRespuesta(id);
+        return res.status(200).json({ success: true, message: tickets });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener tickets esperando respuesta: ${e.message}` });
+    }
+});
+
+router.get("/notificacionesYRecordatorios/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const items = await svc.obtenerNotificacionesYRecordatorios(id);
+        return res.status(200).json({ success: true, message: items });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener notificaciones y recordatorios: ${e.message}` });
+    }
+});
+
 module.exports = router;

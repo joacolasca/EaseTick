@@ -1385,9 +1385,10 @@ async obtenerInformacionCompletaDeTicket(id) {
         }
     }
 
-    async obtenerNotificaciones(idUsuario) {
+    async obtenerNotificacionesYRecordatorios(idUsuario) {
         try {
-            const { data, error } = await supabase
+            // Obtener notificaciones
+            const { data: notificaciones, error: notifError } = await supabase
                 .from('notificacion')
                 .select(`
                     *,
@@ -1398,13 +1399,37 @@ async obtenerInformacionCompletaDeTicket(id) {
                     )
                 `)
                 .eq('fkusuario', idUsuario)
-                .eq('leido', false)  // Solo traer las no leídas
+                .eq('leido', false)
                 .order('fechacreacion', { ascending: false });
 
-            if (error) throw error;
-            return data;
+            if (notifError) throw notifError;
+
+            // Obtener recordatorios
+            const { data: recordatorios, error: recError } = await supabase
+                .from('recordatorio')
+                .select('*')
+                .eq('fkusuario', idUsuario)
+                .order('id', { ascending: false });
+
+            if (recError) throw recError;
+
+            // Combinar y formatear los resultados
+            const recordatoriosFormateados = recordatorios.map(rec => ({
+                ...rec,
+                tipo: 'recordatorio',
+                contenido: rec.texto,
+                leido: false,
+                fechacreacion: rec.created_at || new Date().toISOString()
+            }));
+
+            const notificacionesFormateadas = notificaciones.map(notif => ({
+                ...notif,
+                tipo: 'notificacion'
+            }));
+
+            return [...notificacionesFormateadas, ...recordatoriosFormateados];
         } catch (error) {
-            throw new Error(`Error al obtener notificaciones: ${error.message}`);
+            throw new Error(`Error al obtener notificaciones y recordatorios: ${error.message}`);
         }
     }
 
@@ -1420,6 +1445,25 @@ async obtenerInformacionCompletaDeTicket(id) {
             return data[0];
         } catch (error) {
             throw new Error(`Error al marcar notificación como leída: ${error.message}`);
+        }
+    }
+
+    async obtenerTicketsEsperandoRespuesta(id) {
+        try {
+            const { data, error } = await supabase
+                .from('ticket')
+                .select('*')
+                .eq('fkusuario', id)
+                .eq('fkestado', 3); // Asumiendo que el estado 3 es "Esperando respuesta"
+            
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error(`Error al obtener tickets esperando respuesta: ${error.message}`);
+            throw error;
         }
     }
 }
