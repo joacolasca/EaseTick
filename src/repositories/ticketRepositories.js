@@ -513,11 +513,11 @@ async obtenerCalificacionesPorUsuario(id) {
         });
 
         return {
-            1: puntajeUno,
-            2: puntajeDos,
-            3: puntajeTres,
-            4: puntajeCuatro,
-            5: puntajeCinco,
+            "1⭐": puntajeUno,
+            "2⭐": puntajeDos,
+            "3⭐": puntajeTres,
+            "4⭐": puntajeCuatro,
+            "5⭐": puntajeCinco,
 
         };
     } catch (error) {
