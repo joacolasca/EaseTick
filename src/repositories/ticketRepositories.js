@@ -874,22 +874,18 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) 
 
 async cerrarTicket(idTicket) {
     try {
-        const { data, error } = await supabase
+        const { data: ticket, error } = await supabase
             .from('ticket')
-            .update({
-                fkestado: 2,
-                fechafinalizado: new Date().toISOString()
-            })
-            .match({ id: idTicket });
+            .update({ fkestado: 2 }) // Asumiendo que 2 es el estado "Cerrado"
+            .eq('id', idTicket)
+            .select()
+            .single();
 
-        if (error) {
-            console.error('Error en Supabase:', error);
-            throw new Error('Error al cerrar el ticket en la base de datos');
-        }
+        if (error) throw error;
 
-        return { success: true };
+        return ticket;
     } catch (error) {
-        console.error('Error en cerrarTicket:', error);
+        console.error('Error en repositorio cerrarTicket:', error);
         throw error;
     }
 }

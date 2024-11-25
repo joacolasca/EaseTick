@@ -1,4 +1,11 @@
+const { createClient } = require('@supabase/supabase-js');
 const TicketRepository = require('../repositories/ticketRepositories');
+
+// Configuración de Supabase
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY
+);
 
 class TicketService {
     obtenerTicketsDeEmpleado = async (id) => {
@@ -227,13 +234,16 @@ class TicketService {
             const repo = new TicketRepository();
             const resultado = await repo.cerrarTicket(idTicket);
             
-            if (!resultado.success) {
+            if (!resultado) {
                 throw new Error('No se pudo cerrar el ticket');
             }
-            
-            return resultado;
+
+            return {
+                success: true,
+                ticket: resultado
+            };
         } catch (error) {
-            console.error('Error en servicio cerrarTicket:', error);
+            console.error('Error en cerrarTicket:', error);
             throw error;
         }
     }
@@ -366,7 +376,7 @@ class TicketService {
             const repo = new TicketRepository();
             return await repo.verificarTicketCalificado(idTicket);
         } catch (error) {
-            throw new Error(`Error al verificar calificaci��n del ticket: ${error.message}`);
+            throw new Error(`Error al verificar calificación del ticket: ${error.message}`);
         }
     }
     
