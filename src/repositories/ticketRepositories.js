@@ -668,6 +668,17 @@ async eliminarRecordatorio(id) {
 }
 crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => {
     try {
+        // Convertir a números si vienen como strings
+        const tipoNum = parseInt(tipo);
+        const prioridadNum = parseInt(prioridad);
+        const idClienteNum = parseInt(idCliente);
+        const idEmpresaNum = parseInt(idEmpresa);
+
+        // Validar que las conversiones sean exitosas
+        if (isNaN(tipoNum) || isNaN(prioridadNum) || isNaN(idClienteNum) || isNaN(idEmpresaNum)) {
+            throw new Error('Los valores numéricos son inválidos');
+        }
+
         // Obtener todos los empleados
         const { data: empleados, error: empleadosError } = await supabase
             .from('usuario')
@@ -698,18 +709,18 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
             return ticketCount < minEmpleado.count ? { id: empleado.id, count: ticketCount } : minEmpleado;
         }, { id: null, count: Infinity });
 
-        // Insertar el ticket con el empleado seleccionado
+        // Crear el ticket con los valores numéricos
         const { data, error } = await supabase
             .from('ticket')
             .insert([
                 { 
                     asunto,
-                    fktipo: tipo,
+                    fktipo: tipoNum,
                     fkestado: 1,
-                    fkprioridad: prioridad,
-                    fkusuario: empleadoConMenosTickets.id, // Asignar empleado con menos tickets
-                    fkempresa: idEmpresa,
-                    fkcliente: idCliente,
+                    fkprioridad: prioridadNum,
+                    fkusuario: empleadoConMenosTickets.id,
+                    fkempresa: idEmpresaNum,
+                    fkcliente: idClienteNum,
                     fechacreacion: new Date().toISOString()
                 }
             ])
@@ -741,7 +752,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
             .insert([
                 {
                     fkticket: data.id,
-                    fkCliente: idCliente,
+                    fkCliente: idClienteNum,
                     contenido: mensaje,
                     fechacreacion: new Date().toISOString(),
                     fkEmpleado: empleadoConMenosTickets.id

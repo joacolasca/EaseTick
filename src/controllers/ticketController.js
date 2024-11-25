@@ -508,4 +508,34 @@ router.get("/notificacionesYRecordatorios/:id", async (req, res) => {
     }
 });
 
+router.post("/", async (req, res) => {
+    const { asunto, mensaje, tipo, prioridad, idCliente, idEmpresa } = req.body;
+
+    // Validar que todos los campos requeridos estén presentes
+    if (!asunto || !mensaje || !tipo || !prioridad || !idCliente || !idEmpresa) {
+        return res.status(400).json({
+            success: false,
+            error: "Todos los campos son requeridos"
+        });
+    }
+
+    try {
+        const nuevoTicket = await svc.crearTicket(asunto, mensaje, idCliente, idEmpresa, tipo, prioridad);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                id: nuevoTicket.ticket.id,
+                mensaje: "Ticket creado exitosamente"
+            }
+        });
+    } catch (error) {
+        console.error('Error al crear ticket:', error);
+        return res.status(500).json({
+            success: false,
+            error: `Error al crear el ticket: ${error.message}`
+        });
+    }
+});
+
 module.exports = router;
