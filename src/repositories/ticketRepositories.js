@@ -686,7 +686,7 @@ crearTicket = async (asunto, mensaje, idCliente, idEmpresa, tipo, prioridad) => 
         const { data: empleados, error: empleadosError } = await supabase
             .from('usuario')
             .select('id')
-            .eq('fkrol', 2); // Rol de empleado
+            .in('fkrol', [2, 3])
 
         if (empleadosError) throw new Error(empleadosError.message);
 
