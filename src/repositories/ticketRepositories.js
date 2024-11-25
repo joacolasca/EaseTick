@@ -832,40 +832,31 @@ responderTicket = async (idTicket, mensaje,idUsuario, esEmpleado) => {
     }
 }
 
-async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) {
+async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo) {
     try {
         let archivoUrl = null;
         let archivoNombre = null;
 
-        if (archivo && archivo.buffer) {
-            const timestamp = Date.now();
-            const sanitizedFileName = archivo.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-            const fileName = `ticket-${idTicket}/${timestamp}-${sanitizedFileName}`;
-
-            // Subir archivo
+        if (archivo) {
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('chat-archivos')
-                .upload(fileName, archivo.buffer, {
-                    contentType: archivo.mimetype,
-                    upsert: true
-                });
+                .upload(
+                    `ticket-${idTicket}/${Date.now()}-${archivo.originalname}`,
+                    archivo.buffer,
+                    {
+                        contentType: archivo.mimetype
+                    }
+                );
 
-            if (uploadError) {
-                console.error('Error al subir archivo:', uploadError);
-                throw uploadError;
-            }
+            if (uploadError) throw uploadError;
 
-            // Construir URL pública usando la URL base de Supabase
-            const supabaseUrl = process.env.SUPABASE_URL;
-            archivoUrl = `${supabaseUrl}/storage/v1/object/public/chat-archivos/${fileName}`;
+            // Obtener URL pública del archivo
+            const { data: { publicUrl } } = supabase.storage
+                .from('chat-archivos')
+                .getPublicUrl(uploadData.path);
+
+            archivoUrl = publicUrl;
             archivoNombre = archivo.originalname;
-
-            console.log('Archivo subido exitosamente:', {
-                url: archivoUrl,
-                nombre: archivoNombre,
-                fileName: fileName,
-                supabaseUrl: supabaseUrl
-            });
         }
 
         // Crear mensaje
@@ -884,11 +875,20 @@ async enviarMensaje(idTicket, idUsuario, contenido, esEmpleado, archivo = null) 
             .single();
 
         if (mensajeError) throw mensajeError;
-        
-        console.log('Mensaje creado:', mensaje);
+
+        // Si el mensaje es del cliente, actualizar el estado del ticket a "Esperando respuesta"
+        if (!esEmpleado) {
+            const { error: ticketError } = await supabase
+                .from('ticket')
+                .update({ fkestado: 3 }) // 3 = Esperando respuesta
+                .eq('id', idTicket);
+
+            if (ticketError) throw ticketError;
+        }
+
         return mensaje;
     } catch (error) {
-        console.error('Error en enviarMensaje:', error);
+        console.error('Error en repositorio enviarMensaje:', error);
         throw error;
     }
 }
