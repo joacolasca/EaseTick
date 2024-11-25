@@ -389,6 +389,16 @@ class TicketService {
             throw new Error(`Error al obtener detalles del mensaje: ${error.message}`);
         }
     }
+
+    async obtenerEstadisticasTickets(id) {
+        try {
+            const repo = new TicketRepository();
+            const estadisticas = await repo.obtenerEstadisticasTickets(id);
+            return estadisticas;
+        } catch (error) {
+            throw new Error(`Error al obtener estadísticas de tickets: ${error.message}`);
+        }
+    }
 }
 
 module.exports = TicketService;

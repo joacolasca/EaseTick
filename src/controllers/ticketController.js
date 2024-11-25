@@ -447,4 +447,14 @@ router.get("/:id/verificarCalificacion", async (req, res) => {
     }
 });
 
+router.get("/estadisticas/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const estadisticas = await svc.obtenerEstadisticasTickets(id);
+        return res.status(200).json({ success: true, message: estadisticas });
+    } catch (e) {
+        return res.status(500).send({ error: `Error al obtener estadísticas: ${e.message}` });
+    }
+});
+
 module.exports = router;

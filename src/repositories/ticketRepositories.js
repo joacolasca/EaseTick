@@ -174,55 +174,47 @@ class TicketRepository {
     async obtenerTicketsPorDiaDeLaSemana(id) {
         try {
             const hoy = new Date();
-            const diaSemana = hoy.getDay();
-    
-            // Calcular la fecha del último domingo
-            const ultimoDomingo = new Date(hoy);
-            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
-    
-            // Calcular la fecha del lunes anterior al último domingo
-            const ultimoLunes = new Date(ultimoDomingo);
-            ultimoLunes.setDate(ultimoDomingo.getDate() - 6);
-    
-            // Ajustar las horas para representar correctamente el rango de fechas
-            ultimoLunes.setHours(0, 0, 0, 0);
-            ultimoDomingo.setHours(23, 59, 59, 999);
-    
-            // Convertir las fechas al formato 'YYYY-MM-DD' que acepta PostgreSQL
-            const fechaInicio = ultimoLunes.toISOString().slice(0, 10);
-            const fechaFin = ultimoDomingo.toISOString().slice(0, 10);
-    
-            // Ejecutar la consulta con las fechas en formato correcto
+            const diaSemana = hoy.getDay(); // 0 (domingo) a 6 (sábado)
+            
+            // Calcular el inicio de la semana (lunes)
+            const inicioSemana = new Date(hoy);
+            inicioSemana.setDate(hoy.getDate() - ((diaSemana + 6) % 7));
+            inicioSemana.setHours(0, 0, 0, 0);
+
+            // Calcular el fin de la semana (domingo)
+            const finSemana = new Date(inicioSemana);
+            finSemana.setDate(inicioSemana.getDate() + 6);
+            finSemana.setHours(23, 59, 59, 999);
+
             const { data, error } = await supabase
                 .from('ticket')
-                .select('id, fechacreacion')
-                .eq('fkusuario', id)
-                .gte('fechacreacion', fechaInicio)
-                .lte('fechacreacion', fechaFin);
-    
-            if (error) {
-                throw new Error(error.message);
-            }
-    
-            const diasSemana = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
-    
+                .select('fechacreacion')
+                .eq('fkcliente', id)
+                .gte('fechacreacion', inicioSemana.toISOString())
+                .lte('fechacreacion', finSemana.toISOString())
+                .order('fechacreacion');
+
+            if (error) throw new Error(error.message);
+
+            // Inicializar contadores para cada día
             const ticketsPorDia = {
-                'D': 0, 'L': 0, 'M': 0, 'X': 0, 'J': 0, 'V': 0, 'S': 0
+                'L': 0, 'M': 0, 'X': 0, 'J': 0, 'V': 0, 'S': 0, 'D': 0
             };
-    
+
+            // Contar tickets por día, moviendo cada fecha un día adelante
             data.forEach(ticket => {
                 const fechaTicket = new Date(ticket.fechacreacion);
-                // Mover la fecha del ticket un día adelante
-                fechaTicket.setDate(fechaTicket.getDate() + 1);
-                const diaSemanaNumerico = fechaTicket.getDay();
-                const diaSemanaLetra = diasSemana[diaSemanaNumerico];
-                ticketsPorDia[diaSemanaLetra]++;
+                fechaTicket.setDate(fechaTicket.getDate() + 1); // Mover un día adelante
+                const dia = fechaTicket.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+                const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+                ticketsPorDia[dias[dia]]++;
             });
-    
-    
-            return ticketsPorDia;
+
+            // Convertir a array manteniendo el orden L,M,X,J,V,S,D
+            const ordenDias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+            return ordenDias.map(dia => ticketsPorDia[dia]);
         } catch (error) {
-            console.error(`Error en obtenerTicketsPorDiaDeLaSemana: ${error.message}`);
+            console.error('Error en obtenerTicketsPorDiaDeLaSemana:', error);
             throw error;
         }
     }
@@ -1098,44 +1090,43 @@ async obtenerInformacionCompletaDeTicket(id) {
             const hoy = new Date();
             const diaSemana = hoy.getDay();
 
-            // Calcular la fecha del último domingo
-            const ultimoDomingo = new Date(hoy);
-            ultimoDomingo.setDate(hoy.getDate() - diaSemana);
+            // Calcular el inicio de la semana (lunes)
+            const inicioSemana = new Date(hoy);
+            inicioSemana.setDate(hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1));
+            inicioSemana.setHours(0, 0, 0, 0);
 
-            // Ajustar las horas para representar correctamente el rango de fechas
-            ultimoDomingo.setHours(0, 0, 0, 0);
-            hoy.setHours(23, 59, 59, 999);
-
-            // Convertir las fechas al formato que acepta PostgreSQL
-            const fechaInicio = ultimoDomingo.toISOString();
-            const fechaFin = hoy.toISOString();
+            // Calcular el fin de la semana (domingo)
+            const finSemana = new Date(inicioSemana);
+            finSemana.setDate(inicioSemana.getDate() + 6);
+            finSemana.setHours(23, 59, 59, 999);
 
             const { data, error } = await supabase
                 .from('ticket')
                 .select('fechacreacion')
                 .eq('fkcliente', id)
-                .gte('fechacreacion', fechaInicio)
-                .lte('fechacreacion', fechaFin)
+                .gte('fechacreacion', inicioSemana.toISOString())
+                .lte('fechacreacion', finSemana.toISOString())
                 .order('fechacreacion');
 
             if (error) throw new Error(error.message);
 
-            // Inicializar array solo hasta el día actual
-            const tendenciaSemanal = Array(7).fill(0);
+            // Inicializar array para los días de la semana
+            const ticketsPorDia = [0, 0, 0, 0, 0, 0, 0]; // L,M,X,J,V,S,D
 
-            // Procesar cada ticket
+            // Contar tickets por día
             data.forEach(ticket => {
                 const fechaTicket = new Date(ticket.fechacreacion);
-                const diaIndex = fechaTicket.getDay();
-                // Solo contar si el día es menor o igual al día actual
-                if (diaIndex <= diaSemana) {
-                    tendenciaSemanal[diaIndex]++;
-                }
+                fechaTicket.setHours(fechaTicket.getHours() + 24);
+                const dia = fechaTicket.getDay();
+                // Convertir el índice del día (0-6) al índice del array (0-6 pero empezando en lunes)
+                const indiceArray = dia === 0 ? 6 : dia - 1;
+                ticketsPorDia[indiceArray]++;
             });
 
-            return tendenciaSemanal;
+            return ticketsPorDia;
         } catch (error) {
-            throw new Error(`Error en obtenerTendenciaSemanalCliente: ${error.message}`);
+            console.error('Error en obtenerTendenciaSemanalCliente:', error);
+            throw error;
         }
     }
 
@@ -1322,6 +1313,39 @@ async obtenerInformacionCompletaDeTicket(id) {
 
         if (error) throw error;
         return data;
+    }
+
+    async obtenerEstadisticasTickets(id) {
+        try {
+            // Obtener todos los tickets del usuario
+            const { data: tickets, error } = await supabase
+                .from('ticket')
+                .select(`
+                    *,
+                    prioridad:fkprioridad(nombre)
+                `)
+                .eq('fkusuario', id);
+
+            if (error) throw new Error(error.message);
+
+            // Calcular estadísticas
+            const totalTickets = tickets.length;
+            const highPriority = tickets.filter(ticket => 
+                ticket.prioridad?.nombre === 'Alta' || ticket.prioridad?.nombre === 'Urgente'
+            ).length;
+            const assignedTickets = tickets.filter(ticket => ticket.fkestado === 1).length; // Sin resolver
+            const unassignedTickets = tickets.filter(ticket => ticket.fkestado === 2).length; // Resueltos
+
+            return {
+                totalTickets,
+                highPriority,
+                assignedTickets,
+                unassignedTickets
+            };
+        } catch (error) {
+            console.error('Error en obtenerEstadisticasTickets:', error);
+            throw error;
+        }
     }
 }
 
